@@ -21,7 +21,7 @@ You need to initialize the hook passing it 4 things: `access_token`, `access_tok
 
 If you are using the same `consumer_key` and `consumer_secret` all the time, you probably want to setup those fixed, so that you only have to pass the token parameters for settings the hook:
 
-    OAuthHok.consumer_key = consumer_key
+    OAuthHook.consumer_key = consumer_key
     OAuthHook.consumer_secret = consumer_secret
     oauth_hook = OAuthHook(access_token, access_token_secret)
 
