@@ -7,6 +7,12 @@ This hook is based on <a href="https://github.com/simplegeo/python-oauth2">pytho
 * Author: <a href="http://www.github.com/maraujop/">Miguel Araujo</a>
 * Licence: BSD
 
+## Installation
+
+You can install requests-oauth-hook simply:
+
+    pip install requests-oauth-hook
+
 ## Usage
 
 You need to initialize the hook passing it 4 things: `access_token`, `access_token_secret`, `consumer_key`, `consumer_secret`. There are two ways to do this. First one:
