@@ -3,7 +3,6 @@
 
 import os
 import sys
-import requests
 
 from setuptools import setup, find_packages
 
