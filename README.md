@@ -1,15 +1,15 @@
 # requests-oauth-hook
 
-This is a hook for <a href="http://github.com/kennethreitz/requests">Python-requests</a> great Python HTTP library by <a href="https://github.com/kennethreitz">Kenneth Reitz</a>, that makes Python-requests support Open Authentication version 1.0. 
+This is a hook for <a href="http://github.com/kennethreitz/requests">python-requests</a> great python HTTP library by <a href="https://github.com/kennethreitz">Kenneth Reitz</a>, that makes python-requests support Open Authentication version 1.0. 
 
-This hook is based on <a href="https://github.com/simplegeo/python-oauth2">python-oauth2</a> and uses portions of its code at the moment, kudos to the authors and contributors for doing a huge effort in providing OAuth to Python httplib2.
+This hook is based on <a href="https://github.com/simplegeo/python-oauth2">python-oauth2</a> and uses portions of its code at the moment, kudos to the authors and contributors for doing a huge effort in providing OAuth to python httplib2.
 
 * Author: <a href="http://www.github.com/maraujop/">Miguel Araujo</a>
 * Licence: BSD
 
 ## Installation
 
-You can install requests-oauth-hook simply:
+You can install requests-oauth-hook, simply:
 
     pip install requests-oauth-hook
 
@@ -25,11 +25,11 @@ If you are using the same `consumer_key` and `consumer_secret` all the time, you
     OAuthHook.consumer_secret = consumer_secret
     oauth_hook = OAuthHook(access_token, access_token_secret)
 
-Now you need to pass the hook to Python-requests, you probably want to do it as a session, so you don't have to do this every time:
+Now you need to pass the hook to python-requests, you probably want to do it as a session, so you don't have to do this every time:
 
     client = requests.session(hooks={'pre_request': oauth_hook})
 
-What you get is Python-requests client which you can use the same way as you use requests API:
+What you get is python-requests client which you can use the same way as you use requests API:
 
     response = client.get('http://api.twitter.com/1/account/rate_limit_status.json')
 
@@ -51,4 +51,4 @@ If you'd like to contribute, simply fork the repository, commit your changes to 
 
 * Review python-oauth2 pull requests and bugs. It looks like it's not being maintained anymore.
 * Work on real unit tests.
-* Support for Python3.
+* Support for python3.
