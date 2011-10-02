@@ -29,9 +29,14 @@ Now you need to pass the hook to python-requests, you probably want to do it as 
 
     client = requests.session(hooks={'pre_request': oauth_hook})
 
-What you get is python-requests client which you can use the same way as you use requests API:
+What you get is python-requests client which you can use the same way as you use requests API. Let's see a GET example:
 
     response = client.get('http://api.twitter.com/1/account/rate_limit_status.json')
+    results = json.loads(response.content)
+
+And a POST example:
+
+    response = client.post('http://api.twitter.com/1/statuses/update.json', {'status': "Yay! It works!", 'wrap_links': True})
 
 ## Testing
 
