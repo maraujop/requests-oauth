@@ -6,7 +6,7 @@ import sys
 
 from setuptools import setup, find_packages
 
-version = '0.1.0'
+version = '0.1.1'
 
 setup(
     name='requests-oauth-hook',
