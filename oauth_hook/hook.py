@@ -133,7 +133,12 @@ class OAuthHook(object):
             # must be python <2.5
             query = base_url[4]
         query = parse_qs(query)
-        for k, v in request.params.items():
+        
+        if request.data is None:
+            request.data = []
+        data_and_params = dict(request.data + request.params.items()) 
+
+        for k, v in data_and_params.items():
             query.setdefault(k, []).append(v)
         
         try:
