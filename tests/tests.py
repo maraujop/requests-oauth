@@ -24,7 +24,6 @@ class OAuthTestSuite(unittest.TestCase):
     def test_twitter_rate_limit_GET(self):
         response = client.get('http://api.twitter.com/1/account/rate_limit_status.json')
         self.assertEqual(response.status_code, 200)
-        #self.assertEqual(json.loads(response.headers)['x-warning'], 'Invalid OAuth credentials detected')
         self.assertEqual(json.loads(response.content)['hourly_limit'], 350)
 
     def test_twitter_status_POST(self):
@@ -34,6 +33,9 @@ class OAuthTestSuite(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content)['text'], message)
 
+    def test_twitter_status_GET_with_data(self):
+        response = client.get('http://api.twitter.com/1/statuses/friends.json', data={'user_id': 12345})
+        self.assertEqual(response.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()
