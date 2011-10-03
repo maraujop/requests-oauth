@@ -214,7 +214,7 @@ class OAuthHook(object):
 
         self.sign_request(request)
 
-        if request.method == "GET":
+        if request.method in ("GET", "DELETE"):
             request.url = self.to_url(request)
         else:
             request.headers['Content-Type'] = 'application/x-www-form-urlencoded'
