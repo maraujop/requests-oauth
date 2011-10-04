@@ -37,5 +37,15 @@ class OAuthTestSuite(unittest.TestCase):
         response = client.get('http://api.twitter.com/1/statuses/friends.json', data={'user_id': 12345})
         self.assertEqual(response.status_code, 200)
 
+    def test_twitter_delete(self):
+        """Depends on GET and POST also working properly, as we must first determine the current username and then create a test list to subsequently delete.
+        This test creates a list on Twitter, then deletes it, testing to ensure that OAuth signing occurs on delete."""
+        screen_name = json.loads(client.get('https://api.twitter.com/1/account/verify_credentials.json').content)['screen_name']
+        created_list = json.loads(client.post('https://api.twitter.com/1/%s/lists.json' % screen_name, data={'name': "OAuth Request Hook"}).content)
+        list_id = created_list['id']
+        response = client.delete('http://api.twitter.com/1/%s/lists/%s.json' % (screen_name, list_id))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content), created_list)
+
 if __name__ == '__main__':
     unittest.main()
