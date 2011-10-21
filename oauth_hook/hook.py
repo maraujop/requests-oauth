@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
+import binascii
+import hmac
 import time
 import random
 import base64
 
 import urllib
 from oauth2 import Token, Consumer
-from oauth2 import SignatureMethod_HMAC_SHA1
-from oauth2 import to_utf8_if_string, to_utf8, escape, to_utf8_optional_iterator
 from urlparse import urlparse, urlunparse, parse_qs
-
 try:
     from hashlib import sha1
     sha = sha1
@@ -16,13 +15,29 @@ except ImportError:
     # hashlib was added in Python 2.5
     import sha
 
+###Functions which were previously-provided by Python-oAuth2, ported and shrunk.
+to_utf8 = lambda s: s.encode('UTF-8')
+to_utf8_if_string = lambda s: isinstance(s, basestring) and to_utf8(s) or s
+escape = lambda url: urllib.quote(to_utf8(url), safe='~')
+def to_utf8_optional_iterator(x):
+    if isinstance(x, basestring): return to_utf8(x)
+    try:
+        l = iter(x)
+    except TypeError:
+        return x
+    return [to_utf8_if_string(i) for i in l]
 
-class CustomSignatureMethod_HMAC_SHA1(SignatureMethod_HMAC_SHA1):
+class CustomSignatureMethod_HMAC_SHA1(object):
+    """This is a barebones implementation of a signature method only suitable for use for signing oAuth HTTP requests as a hook to the oAuth Hook library."""
+    name = 'HMAC-SHA1'
+
+    def check(self, request, consumer, token, signature):
+        """Returns whether the given signature is the correct signature for
+        the given consumer and token signing the given request."""
+        built = self.sign(request, consumer, token)
+        return built == signature
+
     def signing_base(self, request, consumer, token):
-        """
-        Overriden, to avoid forcing request have the attribute `normalized_url`
-        and method `get_normalized_parameters`
-        """
         normalized_url = OAuthHook.get_normalized_url(request.url)
         if normalized_url is None:
             raise ValueError("normalized URL for request is not set.")
@@ -39,6 +54,14 @@ class CustomSignatureMethod_HMAC_SHA1(SignatureMethod_HMAC_SHA1):
         raw = '&'.join(sig)
         return key, raw
 
+    def sign(self, request, consumer, token):
+        """Builds the base signature string."""
+        key, raw = self.signing_base(request, consumer, token)
+        hashed = hmac.new(key, raw, sha)
+        # Calculate the digest base 64.
+        return binascii.b2a_base64(hashed.digest())[:-1]
+
+   
 
 class OAuthHook(object):
     OAUTH_VERSION = '1.0'
