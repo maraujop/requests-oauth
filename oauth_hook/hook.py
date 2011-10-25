@@ -6,7 +6,6 @@ import random
 import base64
 
 import urllib
-from oauth2 import Token, Consumer
 from urlparse import urlparse, urlunparse, parse_qs
 try:
     from hashlib import sha1
@@ -26,6 +25,48 @@ def to_utf8_optional_iterator(x):
     except TypeError:
         return x
     return [to_utf8_if_string(i) for i in l]
+
+###Token classes from oAuth2.
+generate_verifier = lambda length=8: ''.join([str(random.randint(0, 9)) for i in xrange(length)])
+
+class OAuthObject(object):
+    key = secret = None
+
+
+    def __init__(self, key, secret):
+        self.key, self.secret = key, secret
+        if None in (self.key, self.secret):
+            raise ValueError("Key and secret must be set.")
+
+class Consumer(OAuthObject):
+    pass
+
+class Token(OAuthObject):
+    callback = callback_confirmed = verifier = None
+
+    def set_callback(self, callback):
+        self.callback = callback
+        self.callback_confirmed = True
+
+    def set_verifier(self, verifier=None):
+        if varifier is None:
+            verifier = generate_verifier()
+        self.verifier = verifier
+
+    def get_callback_url(self):
+        if self.callback and self.verifier:
+            # Append the oauth_verifier.
+            parts = urlparse(self.callback)
+            scheme, netloc, path, params, query, fragment = parts[:6]
+            if query:
+                query = '%s&oauth_verifier=%s' % (query, self.verifier)
+            else:
+                query = 'oauth_verifier=%s' % self.verifier
+            return urlunparse((scheme, netloc, path, params,
+                query, fragment))
+        return self.callback
+
+###Signature method
 
 class CustomSignatureMethod_HMAC_SHA1(object):
     """This is a barebones implementation of a signature method only suitable for use for signing oAuth HTTP requests as a hook to the oAuth Hook library."""
