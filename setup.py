@@ -15,7 +15,7 @@ setup(
     author_email='miguel.araujo.perez@gmail.com',
     url='http://github.com/maraujop/requests-oauth-hook',
     packages=find_packages(),
-    install_requires=['requests', 'oauth2'],
+    install_requires=['requests', ],
     license='BSD',
     classifiers=(
         'Development Status :: 4 - Beta',
