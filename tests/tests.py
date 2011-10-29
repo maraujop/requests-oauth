@@ -1,16 +1,16 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-
 import sys
 import os
 import unittest
 import random
 import json
 import requests
+from urlparse import parse_qs
 
 sys.path.append(os.path.dirname(os.getcwd()))
 
-from oauth_hook import OAuthHook
+from oauth_hook.hook import OAuthHook
 from test_settings import TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET
 from test_settings import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET
 
@@ -46,6 +46,14 @@ class OAuthTestSuite(unittest.TestCase):
         response = client.delete('http://api.twitter.com/1/%s/lists/%s.json' % (screen_name, list_id))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content), created_list)
+
+    def test_twitter_oauth_get_token(self):
+        client = requests.session(hooks={'pre_request': OAuthHook()})
+        response = client.get('https://api.twitter.com/oauth/request_token')
+        self.assertEqual(response.status_code, 200)
+        response = parse_qs(response.content)
+        self.assertTrue(response['oauth_token'])
+        self.assertTrue(response['oauth_token_secret'])
 
 if __name__ == '__main__':
     unittest.main()

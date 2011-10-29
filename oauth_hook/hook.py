@@ -46,8 +46,15 @@ class OAuthHook(object):
     consumer_secret = None
     signature = CustomSignatureMethod_HMAC_SHA1()
 
-    def __init__(self, access_token, access_token_secret, consumer_key=None, consumer_secret=None):
-        self.token = Token(access_token, access_token_secret)
+    def __init__(self, access_token=None, access_token_secret=None, consumer_key=None, consumer_secret=None):
+        """
+        Consumer is compulsory, while the user's Token can be retrieved through the API
+        """
+        if access_token is not None and access_token_secret is not None:
+            self.token = Token(access_token, access_token_secret)
+        else:
+            self.token = None
+
         if consumer_key is None and consumer_secret is None:
             consumer_key = self.consumer_key
             consumer_secret = self.consumer_secret
@@ -208,8 +215,10 @@ class OAuthHook(object):
         request.params['oauth_timestamp'] = str(int(time.time()))
         request.params['oauth_nonce'] = str(random.randint(0, 100000000))
         request.params['oauth_version'] = self.OAUTH_VERSION
-        request.params['oauth_token'] = self.token.key
-        if self.token.verifier:
+
+        if self.token:
+            request.params['oauth_token'] = self.token.key
+        if hasattr(self.token, 'verifier'):
             request.params['oauth_verifier'] = self.token.verifier
 
         self.sign_request(request)
