@@ -38,6 +38,15 @@ And a POST example:
 
     response = client.post('http://api.twitter.com/1/statuses/update.json', {'status': "Yay! It works!", 'wrap_links': True})
 
+Beware that you are not forced to pass the token information to the hook. That way you can retrieve it from the API. Let's see a Twitter example:
+
+    OAuthHook.consumer_key = consumer_key
+    OAuthHook.consumer_secret = consumer_secret
+    client = requests.session(hooks={'pre_request': OAuthHook()})
+    response = client.get('https://api.twitter.com/oauth/request_token')
+    response = parse_qs(response.content)
+    print "Token: %s  Secret: %s" % (response['oauth_token'], response['oauth_token_secret'])
+
 ## Testing
 
 If you want to run the tests, you will need to copy `test_settings.py.template` into `test_settings.py`. This file is in the `.gitignore` index, so it won't be committed:
