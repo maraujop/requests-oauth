@@ -73,9 +73,6 @@ class OAuthHook(object):
     def get_normalized_parameters(request):
         """Returns a string that contains the parameters that must be signed. 
         This function is called by oauth2 SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 """
-        if request.data is None:
-            request.data = []
-        
         data_and_params = dict(request.data + request.params.items()) 
         items = []
         for key, value in data_and_params.iteritems():
@@ -147,9 +144,6 @@ class OAuthHook(object):
     def to_postdata(request):
         """Serialize as post data for a POST request. This serializes data and params"""
         # Headers and data together in a dictionary
-        if request.data is None:
-            request.data = []
-
         data_and_params = dict(request.data + request.params.items()) 
 
         d = {}
@@ -186,6 +180,9 @@ class OAuthHook(object):
         """
         if request.params is None or isinstance(request.params, list):
             request.params = dict()
+
+        if request.data is None:
+            request.data = []
 
         # Adding oauth stuff to params
         request.params['oauth_consumer_key'] = self.consumer.key
