@@ -7,7 +7,7 @@ import urllib
 from oauth2 import Token, Consumer
 from oauth2 import SignatureMethod_HMAC_SHA1
 from oauth2 import to_utf8_if_string, to_utf8, escape, to_utf8_optional_iterator
-from urlparse import urlparse, urlunparse, parse_qs
+from urlparse import urlparse, urlunparse, parse_qs, urlsplit, urlunsplit
 
 try:
     from hashlib import sha1
@@ -133,38 +133,15 @@ class OAuthHook(object):
     @staticmethod
     def to_url(request):
         """Serialize as a URL for a GET request."""
-        base_url = urlparse(request.url)
-        try:
-            query = base_url.query
-        except AttributeError:
-            # must be python <2.5
-            query = base_url[4]
+        scheme, netloc, path, query, fragment = urlsplit(request.url.encode('utf-8'))
         query = parse_qs(query)
-        
-        if request.data is None:
-            request.data = []
         data_and_params = dict(request.data + request.params.items()) 
 
-        for k, v in data_and_params.items():
-            query.setdefault(k, []).append(v)
-        
-        try:
-            scheme = base_url.scheme
-            netloc = base_url.netloc
-            path = base_url.path
-            params = base_url.params
-            fragment = base_url.fragment
-        except AttributeError:
-            # must be python <2.5
-            scheme = base_url[0]
-            netloc = base_url[1]
-            path = base_url[2]
-            params = base_url[3]
-            fragment = base_url[5]
-        
-        url = (scheme, netloc, path, params,
-               urllib.urlencode(query, True), fragment)
-        return urlunparse(url)
+        for key, value in data_and_params.iteritems():
+            query.setdefault(key.encode('utf-8'), []).append(to_utf8_optional_iterator(value))
+            
+        query = urllib.urlencode(query, True)
+        return urlunsplit((scheme, netloc, path, query, fragment))
 
     @staticmethod
     def to_postdata(request):
