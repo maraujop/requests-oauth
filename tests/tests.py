@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(os.getcwd()))
 from oauth_hook.hook import OAuthHook
 from test_settings import TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET
 from test_settings import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET
+from test_settings import RDIO_API_KEY, RDIO_SHARED_SECRET
 
 # Initializing the hook and Python-requests client
 OAuthHook.consumer_key = TWITTER_CONSUMER_KEY
@@ -51,6 +52,13 @@ class OAuthTestSuite(unittest.TestCase):
         client = requests.session(hooks={'pre_request': OAuthHook()})
         response = client.get('https://api.twitter.com/oauth/request_token')
         self.assertEqual(response.status_code, 200)
+        response = parse_qs(response.content)
+        self.assertTrue(response['oauth_token'])
+        self.assertTrue(response['oauth_token_secret'])
+
+    def test_rdio_oauth_get_token(self):
+        client = requests.session(hooks={'pre_request': OAuthHook(consumer_key=RDIO_API_KEY, consumer_secret=RDIO_SHARED_SECRET)})
+        response = client.post('http://api.rdio.com/oauth/request_token')
         response = parse_qs(response.content)
         self.assertTrue(response['oauth_token'])
         self.assertTrue(response['oauth_token_secret'])
