@@ -56,12 +56,21 @@ class OAuthTestSuite(unittest.TestCase):
         self.assertTrue(response['oauth_token'])
         self.assertTrue(response['oauth_token_secret'])
 
-    def test_rdio_oauth_get_token(self):
+    def test_rdio_oauth_get_token_data(self):
         client = requests.session(hooks={'pre_request': OAuthHook(consumer_key=RDIO_API_KEY, consumer_secret=RDIO_SHARED_SECRET)})
+        response = client.post('http://api.rdio.com/oauth/request_token', {'oauth_callback': 'oob'})
+        response = parse_qs(response.content)
+        self.assertTrue(response['oauth_token'])
+        self.assertTrue(response['oauth_token_secret'])
+
+    def test_rdio_oauth_get_token_params(self):
+        client = requests.session(hooks={'pre_request': OAuthHook(consumer_key=RDIO_API_KEY, consumer_secret=RDIO_SHARED_SECRET)}, params={'oauth_callback': 'oob'})
         response = client.post('http://api.rdio.com/oauth/request_token')
         response = parse_qs(response.content)
         self.assertTrue(response['oauth_token'])
         self.assertTrue(response['oauth_token_secret'])
+
+
 
 if __name__ == '__main__':
     unittest.main()
