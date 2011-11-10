@@ -1,25 +1,25 @@
 # requests-oauth-hook
 
-This is a hook for <a href="http://github.com/kennethreitz/requests">python-requests</a> great python HTTP library by <a href="https://github.com/kennethreitz">Kenneth Reitz</a>, that makes python-requests support Open Authentication version 1.0. 
+This is a hook for <a href="http://github.com/kennethreitz/requests">python-requests</a> great python HTTP library by <a href="https://github.com/kennethreitz">Kenneth Reitz</a>, that makes python-requests support Open Authentication version 1.0. The intention of this project is to provide the easiest way to do OAuth connections with Python.
 
-This hook is based on <a href="https://github.com/simplegeo/python-oauth2">python-oauth2</a> and uses portions of its code at the moment, kudos to the authors and contributors for doing a huge effort in providing OAuth to python httplib2.
+This hook was initially based on <a href="https://github.com/simplegeo/python-oauth2">python-oauth2</a>, which looks unmaintained, kudos to the authors and contributors for doing a huge effort in providing OAuth to python httplib2.
 
 * Author: <a href="http://www.github.com/maraujop/">Miguel Araujo</a>
 * Licence: BSD
 
 ## Installation
 
-You can install requests-oauth-hook, simply:
+You can install requests-oauth-hook by simply doing:
 
     pip install requests-oauth-hook
 
 ## Usage
 
-You need to initialize the hook passing it 4 things: `access_token`, `access_token_secret`, `consumer_key`, `consumer_secret`. There are two ways to do this. First one:
+You can initialize the hook passing it 4 parameters: `access_token`, `access_token_secret`, `consumer_key`, `consumer_secret`. First two `access_token` and `access_token_secret` are optional, in case you want to retrieve those from the API service (see later for an example). There are two ways to do initialize the hook. First one:
 
     oauth_hook = OAuthHook(access_token, access_token_secret, consumer_key, consumer_secret)
 
-If you are using the same `consumer_key` and `consumer_secret` all the time, you probably want to setup those fixed, so that you only have to pass the token parameters for settings the hook:
+If you are using the same `consumer_key` and `consumer_secret` all the time, you probably want to setup those fixed, so that you only have to pass the token parameters for setting the hook:
 
     OAuthHook.consumer_key = consumer_key
     OAuthHook.consumer_secret = consumer_secret
@@ -51,7 +51,7 @@ If you want to run the tests, you will need to copy `test_settings.py.template` 
 
     cp test_settings.py.template test_settings.py
 
-Then fill in the information there. At the moment, the testing of the library is done in a functional way, doing a GET and a POST request against Twitter API. So use a test account and not your personal account:
+Then fill in the information there. At the moment, the testing of the library is done in a functional way, doing a GET and a POST request against OAuth API services, so use a test account and not your personal account:
 
     ./tests.py
 
@@ -61,6 +61,5 @@ If you'd like to contribute, simply fork the repository, commit your changes to 
 
 ## TODO
 
-* Review python-oauth2 pull requests and bugs. It looks like it's not being maintained anymore.
-* Work on real unit tests.
+* Improve testing suite.
 * Support for python3.
