@@ -1,4 +1,4 @@
-# requests-oauth-hook
+# requests-oauth
 
 This is a hook for <a href="http://github.com/kennethreitz/requests">python-requests</a> great python HTTP library by <a href="https://github.com/kennethreitz">Kenneth Reitz</a>, that makes python-requests support Open Authentication version 1.0. The intention of this project is to provide the easiest way to do OAuth connections with Python.
 
@@ -9,9 +9,9 @@ This hook was initially based on <a href="https://github.com/simplegeo/python-oa
 
 ## Installation
 
-You can install requests-oauth-hook by simply doing:
+You can install requests-oauth by simply doing:
 
-    pip install requests-oauth-hook
+    pip install requests-oauth
 
 ## Usage
 

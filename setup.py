@@ -3,16 +3,16 @@
 
 from setuptools import setup, find_packages
 
-version = '0.2.0'
+version = '0.2.1'
 
 setup(
-    name='requests-oauth-hook',
+    name='requests-oauth',
     version=version,
     description='Hook for adding Open Authentication support to Python-requests HTTP library.',
     long_description=open('README.md').read(),
     author='Miguel Araujo',
     author_email='miguel.araujo.perez@gmail.com',
-    url='http://github.com/maraujop/requests-oauth-hook',
+    url='http://github.com/maraujop/requests-oauth',
     packages=find_packages(),
     install_requires=['requests', ],
     license='BSD',
