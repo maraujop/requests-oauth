@@ -202,6 +202,11 @@ class OAuthHook(object):
 
         self.sign_request(request)
 
+        # We reset _enc_params info to avoid that requests constructs a wrong url when calling
+        # _build_url in models.py
+        if request._enc_params:
+            request._enc_params = ''
+
         if request.method in ("GET", "DELETE"):
             request.url = self.to_url(request)
         else:
