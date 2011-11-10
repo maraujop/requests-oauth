@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-import binascii
-import hmac
 import time
 import random
 import base64
-
 import urllib
 from urlparse import urlparse, urlunparse, parse_qs, urlsplit, urlunsplit
+
+from auth import Token, Consumer
+from auth import to_utf8_if_string, to_utf8, to_utf8_optional_iterator, escape
+from auth import SignatureMethod_HMAC_SHA1
 
 try:
     from hashlib import sha1
@@ -15,71 +16,13 @@ except ImportError:
     # hashlib was added in Python 2.5
     import sha
 
-###Functions which were previously-provided by Python-oAuth2, ported and shrunk.
-to_utf8 = lambda s: s.encode('UTF-8')
-to_utf8_if_string = lambda s: isinstance(s, basestring) and to_utf8(s) or s
-escape = lambda url: urllib.quote(to_utf8(url), safe='~')
-def to_utf8_optional_iterator(x):
-    if isinstance(x, basestring): return to_utf8(x)
-    try:
-        l = iter(x)
-    except TypeError:
-        return x
-    return [to_utf8_if_string(i) for i in l]
 
-###Token classes from oAuth2.
-generate_verifier = lambda length=8: ''.join([str(random.randint(0, 9)) for i in xrange(length)])
-
-class OAuthObject(object):
-    key = secret = None
-
-
-    def __init__(self, key, secret):
-        self.key, self.secret = key, secret
-        if None in (self.key, self.secret):
-            raise ValueError("Key and secret must be set.")
-
-class Consumer(OAuthObject):
-    pass
-
-class Token(OAuthObject):
-    callback = callback_confirmed = verifier = None
-
-    def set_callback(self, callback):
-        self.callback = callback
-        self.callback_confirmed = True
-
-    def set_verifier(self, verifier=None):
-        if varifier is None:
-            verifier = generate_verifier()
-        self.verifier = verifier
-
-    def get_callback_url(self):
-        if self.callback and self.verifier:
-            # Append the oauth_verifier.
-            parts = urlparse(self.callback)
-            scheme, netloc, path, params, query, fragment = parts[:6]
-            if query:
-                query = '%s&oauth_verifier=%s' % (query, self.verifier)
-            else:
-                query = 'oauth_verifier=%s' % self.verifier
-            return urlunparse((scheme, netloc, path, params,
-                query, fragment))
-        return self.callback
-
-###Signature method
-
-class CustomSignatureMethod_HMAC_SHA1(object):
-    """This is a barebones implementation of a signature method only suitable for use for signing oAuth HTTP requests as a hook to the oAuth Hook library."""
-    name = 'HMAC-SHA1'
-
-    def check(self, request, consumer, token, signature):
-        """Returns whether the given signature is the correct signature for
-        the given consumer and token signing the given request."""
-        built = self.sign(request, consumer, token)
-        return built == signature
-
+class CustomSignatureMethod_HMAC_SHA1(SignatureMethod_HMAC_SHA1):
     def signing_base(self, request, consumer, token):
+        """
+        This method generates the OAuth signature. It's defined here to avoid
+        circular imports.
+        """
         normalized_url = OAuthHook.get_normalized_url(request.url)
         if normalized_url is None:
             raise ValueError("normalized URL for request is not set.")
@@ -96,14 +39,6 @@ class CustomSignatureMethod_HMAC_SHA1(object):
         raw = '&'.join(sig)
         return key, raw
 
-    def sign(self, request, consumer, token):
-        """Builds the base signature string."""
-        key, raw = self.signing_base(request, consumer, token)
-        hashed = hmac.new(key, raw, sha)
-        # Calculate the digest base 64.
-        return binascii.b2a_base64(hashed.digest())[:-1]
-
-   
 
 class OAuthHook(object):
     OAUTH_VERSION = '1.0'
