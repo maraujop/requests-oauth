@@ -207,6 +207,10 @@ class OAuthHook(object):
         if request._enc_params:
             request._enc_params = ''
 
+        # Looks like OAuth API providers don't handle cookies well, so we reset them
+        # See Github issue #5 https://github.com/maraujop/requests-oauth/issues/5
+        request.cookies = {}
+
         if request.method in ("GET", "DELETE"):
             request.url = self.to_url(request)
         else:
