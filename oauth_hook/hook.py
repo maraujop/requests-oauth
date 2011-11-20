@@ -29,8 +29,6 @@ class CustomSignatureMethod_HMAC_SHA1(SignatureMethod_HMAC_SHA1):
 
 class OAuthHook(object):
     OAUTH_VERSION = '1.0'
-    consumer_key = None
-    consumer_secret = None
     signature = CustomSignatureMethod_HMAC_SHA1()
 
     def __init__(self, access_token=None, access_token_secret=None, consumer_key=None, consumer_secret=None):
