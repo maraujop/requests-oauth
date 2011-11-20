@@ -150,25 +150,6 @@ class OAuthHook(object):
         # result in 'k=v1&k=v2' and not k=%5B%27v1%27%2C+%27v2%27%5D
         return urllib.urlencode(d, True).replace('+', '%20')
 
-    def sign_request(self, request):
-        """Signs the request using `self.signature`, `self.consumer` and `self.token`
-        for OAuth authentication handling. This basically means generating and adding 
-        `oauth_signature_method` and `oauth_signature` to `request.params`.
-        """
-        if not request.method == "POST":
-            # according to
-            # http://oauth.googlecode.com/svn/spec/ext/body_hash/1.0/oauth-bodyhash.html
-            # section 4.1.1 "OAuth Consumers MUST NOT include an
-            # oauth_body_hash parameter on requests with form-encoded
-            # request bodies."
-            if request._enc_data is None:
-                request._enc_data = ''
-
-            request.params['oauth_body_hash'] = base64.b64encode(sha(request._enc_data).digest())
-
-        request.params['oauth_signature_method'] = self.signature.name
-        request.params['oauth_signature'] = self.signature.sign(request, self.consumer, self.token)
-
     def __call__(self, request):
         """
         Pre-request hook that signs a Python-requests Request for OAuth authentication
@@ -193,8 +174,8 @@ class OAuthHook(object):
             request.params['oauth_token'] = self.token.key
         if hasattr(self.token, 'verifier') and self.token.verifier:
             request.params['oauth_verifier'] = self.token.verifier
-
-        self.sign_request(request)
+        request.params['oauth_signature_method'] = self.signature.name
+        request.params['oauth_signature'] = self.signature.sign(request, self.consumer, self.token)
 
         # We reset _enc_params info to avoid that requests constructs a wrong url when calling
         # _build_url in models.py
