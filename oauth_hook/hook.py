@@ -109,21 +109,18 @@ class OAuthHook(object):
         """
         Returns a normalized url, without params
         """
-        if url is not None:
-            scheme, netloc, path, params, query, fragment = urlparse(url)
+        scheme, netloc, path, params, query, fragment = urlparse(url)
 
-            # Exclude default port numbers.
-            if scheme == 'http' and netloc[-3:] == ':80':
-                netloc = netloc[:-3]
-            elif scheme == 'https' and netloc[-4:] == ':443':
-                netloc = netloc[:-4]
-            if scheme not in ('http', 'https'):
-                raise ValueError("Unsupported URL %s (%s)." % (url, scheme))
+        # Exclude default port numbers.
+        if scheme == 'http' and netloc[-3:] == ':80':
+            netloc = netloc[:-3]
+        elif scheme == 'https' and netloc[-4:] == ':443':
+            netloc = netloc[:-4]
+        if scheme not in ('http', 'https'):
+            raise ValueError("Unsupported URL %s (%s)." % (url, scheme))
 
-            # Normalized URL excludes params, query, and fragment.
-            return urlunparse((scheme, netloc, path, None, None, None))
-        else:
-            return None
+        # Normalized URL excludes params, query, and fragment.
+        return urlunparse((scheme, netloc, path, None, None, None))
 
     @staticmethod
     def to_url(request):
@@ -192,10 +189,9 @@ class OAuthHook(object):
         request.params['oauth_timestamp'] = str(int(time.time()))
         request.params['oauth_nonce'] = str(random.randint(0, 100000000))
         request.params['oauth_version'] = self.OAUTH_VERSION
-
         if self.token:
             request.params['oauth_token'] = self.token.key
-        if hasattr(self.token, 'verifier'):
+        if hasattr(self.token, 'verifier') and self.token.verifier:
             request.params['oauth_verifier'] = self.token.verifier
 
         self.sign_request(request)
