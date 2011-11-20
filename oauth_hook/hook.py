@@ -12,21 +12,16 @@ from auth import SignatureMethod_HMAC_SHA1
 class CustomSignatureMethod_HMAC_SHA1(SignatureMethod_HMAC_SHA1):
     def signing_base(self, request, consumer, token):
         """
-        This method generates the OAuth signature. It's defined here to avoid
-        circular imports.
+        This method generates the OAuth signature. It's defined here to avoid circular imports.
         """
-        normalized_url = OAuthHook.get_normalized_url(request.url)
-        if normalized_url is None:
-            raise ValueError("normalized URL for request is not set.")
-
         sig = (
             escape(request.method),
-            escape(normalized_url),
+            escape(OAuthHook.get_normalized_url(request.url)),
             escape(OAuthHook.get_normalized_parameters(request)),
         )
 
         key = '%s&' % escape(consumer.secret)
-        if token:
+        if token is not None:
             key += escape(token.secret)
         raw = '&'.join(sig)
         return key, raw
@@ -56,7 +51,7 @@ class OAuthHook(object):
     @staticmethod
     def _split_url_string(query_string):
         """
-        Turns a `query_string` into a dictionary with unquoted values
+        Turns a `query_string` into a Python dictionary with unquoted values
         """
         parameters = parse_qs(to_utf8(query_string), keep_blank_values=True)
         for k, v in parameters.iteritems():
@@ -70,24 +65,26 @@ class OAuthHook(object):
         This function is called by SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 
         """
         data_and_params = dict(request.data.items() + request.params.items())
+        for key,value in data_and_params.items():
+            request.data_and_params[to_utf8(key)] = to_utf8(value)
+
+        if request.data_and_params.has_key('oauth_signature'):
+            del request.data_and_params['oauth_signature']
+
         items = []
-
-        if data_and_params.has_key('oauth_signature'):
-            del data_and_params['oauth_signature']
-
-        for key, value in data_and_params.iteritems():
+        for key, value in request.data_and_params.iteritems():
             # 1.0a/9.1.1 states that kvp must be sorted by key, then by value,
             # so we unpack sequence values into multiple items for sorting.
             if isinstance(value, basestring):
-                items.append((to_utf8(key), to_utf8(value)))
+                items.append((key, value))
             else:
                 try:
                     value = list(value)
                 except TypeError, e:
                     assert 'is not iterable' in str(e)
-                    items.append((to_utf8(key), to_utf8(value)))
+                    items.append((key, value))
                 else:
-                    items.extend((to_utf8(key), to_utf8(item)) for item in value)
+                    items.extend((key, item) for item in value)
 
         # Include any query string parameters included in the url
         query_string = urlparse(request.url)[4]
@@ -117,12 +114,11 @@ class OAuthHook(object):
     @staticmethod
     def to_url(request):
         """Serialize as a URL for a GET request."""
-        scheme, netloc, path, query, fragment = urlsplit(request.url.encode('utf-8'))
+        scheme, netloc, path, query, fragment = urlsplit(to_utf8(request.url))
         query = parse_qs(query)
-        data_and_params = dict(request.data.items() + request.params.items())
 
-        for key, value in data_and_params.iteritems():
-            query.setdefault(to_utf8(key), []).append(to_utf8(value))
+        for key, value in request.data_and_params.iteritems():
+            query.setdefault(key, []).append(value)
             
         query = urllib.urlencode(query, True)
         return urlunsplit((scheme, netloc, path, query, fragment))
@@ -130,17 +126,8 @@ class OAuthHook(object):
     @staticmethod
     def to_postdata(request):
         """Serialize as post data for a POST request. This serializes data and params"""
-        # Headers and data together in a dictionary
-        data_and_params = dict(request.data.items() + request.params.items())
-
-        d = {}
-        for k, v in data_and_params.iteritems():
-            d[to_utf8(k)] = to_utf8(v)
-
-        # tell urlencode to deal with sequence values and map them correctly
-        # to resulting querystring. for example self["k"] = ["v1", "v2"] will
-        # result in 'k=v1&k=v2' and not k=%5B%27v1%27%2C+%27v2%27%5D
-        return urllib.urlencode(d, True).replace('+', '%20')
+        # tell urlencode to convert each sequence element to a separate parameter
+        return urllib.urlencode(request.data_and_params, True).replace('+', '%20')
 
     def __call__(self, request):
         """
@@ -157,7 +144,18 @@ class OAuthHook(object):
         if isinstance(request.data, list):
             request.data = dict(request.data)
 
-        # Adding oauth stuff to params
+        # We reset _enc_params info to avoid that requests constructs a wrong url when calling _build_url
+        if request._enc_params:
+            request._enc_params = ''
+
+        # Looks like OAuth API providers don't handle cookies well, so we reset them
+        # See Github issue #5 https://github.com/maraujop/requests-oauth/issues/5
+        request.cookies = {}
+
+        # Dictionary to store data and params mixed together
+        request.data_and_params = {}
+
+        # Adding OAuth params
         request.params['oauth_consumer_key'] = self.consumer.key
         request.params['oauth_timestamp'] = str(int(time.time()))
         request.params['oauth_nonce'] = str(random.randint(0, 100000000))
@@ -168,15 +166,7 @@ class OAuthHook(object):
             request.params['oauth_verifier'] = self.token.verifier
         request.params['oauth_signature_method'] = self.signature.name
         request.params['oauth_signature'] = self.signature.sign(request, self.consumer, self.token)
-
-        # We reset _enc_params info to avoid that requests constructs a wrong url when calling
-        # _build_url in models.py
-        if request._enc_params:
-            request._enc_params = ''
-
-        # Looks like OAuth API providers don't handle cookies well, so we reset them
-        # See Github issue #5 https://github.com/maraujop/requests-oauth/issues/5
-        request.cookies = {}
+        request.data_and_params['oauth_signature'] = request.params['oauth_signature']
 
         if request.method in ("GET", "DELETE"):
             request.url = self.to_url(request)
