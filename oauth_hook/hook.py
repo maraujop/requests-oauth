@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 import time
 import random
-import base64
 import urllib
 from urlparse import urlparse, urlunparse, parse_qs, urlsplit, urlunsplit
 
 from auth import Token, Consumer
-from auth import to_utf8_if_string, to_utf8, to_utf8_optional_iterator, escape
+from auth import to_utf8, escape
 from auth import SignatureMethod_HMAC_SHA1
-
-try:
-    from hashlib import sha1
-    sha = sha1
-except ImportError:
-    # hashlib was added in Python 2.5
-    import sha
 
 
 class CustomSignatureMethod_HMAC_SHA1(SignatureMethod_HMAC_SHA1):
@@ -87,15 +79,15 @@ class OAuthHook(object):
             # 1.0a/9.1.1 states that kvp must be sorted by key, then by value,
             # so we unpack sequence values into multiple items for sorting.
             if isinstance(value, basestring):
-                items.append((to_utf8_if_string(key), to_utf8(value)))
+                items.append((to_utf8(key), to_utf8(value)))
             else:
                 try:
                     value = list(value)
                 except TypeError, e:
                     assert 'is not iterable' in str(e)
-                    items.append((to_utf8_if_string(key), to_utf8_if_string(value)))
+                    items.append((to_utf8(key), to_utf8(value)))
                 else:
-                    items.extend((to_utf8_if_string(key), to_utf8_if_string(item)) for item in value)
+                    items.extend((to_utf8(key), to_utf8(item)) for item in value)
 
         # Include any query string parameters included in the url
         query_string = urlparse(request.url)[4]
@@ -130,7 +122,7 @@ class OAuthHook(object):
         data_and_params = dict(request.data.items() + request.params.items())
 
         for key, value in data_and_params.iteritems():
-            query.setdefault(key.encode('utf-8'), []).append(to_utf8_optional_iterator(value))
+            query.setdefault(to_utf8(key), []).append(to_utf8(value))
             
         query = urllib.urlencode(query, True)
         return urlunsplit((scheme, netloc, path, query, fragment))
@@ -143,7 +135,7 @@ class OAuthHook(object):
 
         d = {}
         for k, v in data_and_params.iteritems():
-            d[k.encode('utf-8')] = to_utf8_optional_iterator(v)
+            d[to_utf8(k)] = to_utf8(v)
 
         # tell urlencode to deal with sequence values and map them correctly
         # to resulting querystring. for example self["k"] = ["v1", "v2"] will

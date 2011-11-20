@@ -10,12 +10,17 @@ except ImportError:
     # hashlib was added in Python 2.5
     import sha
 
-
-to_utf8 = lambda s: s.encode('UTF-8')
-to_utf8_if_string = lambda s: isinstance(s, basestring) and to_utf8(s) or s
 escape = lambda url: urllib.quote(to_utf8(url), safe='~')
-def to_utf8_optional_iterator(x):
-    if isinstance(x, basestring): return to_utf8(x)
+
+def to_utf8(x):
+    """
+    Tries to utf-8 encode x when possible 
+
+    If x is a string returns it encoded, otherwise tries to iter x and 
+    encode utf-8 all strings it contains, returning a list.
+    """
+    if isinstance(x, basestring): 
+        return x.encode('utf-8')
     try:
         l = iter(x)
     except TypeError:
