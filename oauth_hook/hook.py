@@ -62,22 +62,28 @@ class OAuthHook(object):
         self.consumer = Consumer(consumer_key, consumer_secret)
 
     @staticmethod
-    def _split_url_string(param_str):
-        """Turn URL string into parameters."""
-        parameters = parse_qs(param_str.encode('utf-8'), keep_blank_values=True)
+    def _split_url_string(query_string):
+        """
+        Turns a `query_string` into a dictionary with unquoted values
+        """
+        parameters = parse_qs(to_utf8(query_string), keep_blank_values=True)
         for k, v in parameters.iteritems():
             parameters[k] = urllib.unquote(v[0])
         return parameters
 
     @staticmethod
     def get_normalized_parameters(request):
-        """Returns a string that contains the parameters that must be signed. 
-        This function is called by oauth2 SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 """
+        """
+        Returns a string that contains the parameters that must be signed. 
+        This function is called by SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 
+        """
         data_and_params = dict(request.data.items() + request.params.items())
         items = []
+
+        if data_and_params.has_key('oauth_signature'):
+            del data_and_params['oauth_signature']
+
         for key, value in data_and_params.iteritems():
-            if key == 'oauth_signature':
-                continue
             # 1.0a/9.1.1 states that kvp must be sorted by key, then by value,
             # so we unpack sequence values into multiple items for sorting.
             if isinstance(value, basestring):
@@ -91,20 +97,12 @@ class OAuthHook(object):
                 else:
                     items.extend((to_utf8_if_string(key), to_utf8_if_string(item)) for item in value)
 
-        # Include any query string parameters from the provided URL
-        query = urlparse(request.url)[4]
-
-        url_items = OAuthHook._split_url_string(query).items()
-        url_items = [(to_utf8(k), to_utf8(v)) for k, v in url_items if k != 'oauth_signature']
-        items.extend(url_items)
-
+        # Include any query string parameters included in the url
+        query_string = urlparse(request.url)[4]
+        items.extend([(to_utf8(k), to_utf8(v)) for k, v in OAuthHook._split_url_string(query_string).items()])
         items.sort()
-        encoded_str = urllib.urlencode(items)
-        # Encode signature parameters per OAuth Core 1.0 protocol
-        # spec draft 7, section 3.6
-        # (http://tools.ietf.org/html/draft-hammer-oauth-07#section-3.6)
-        # Spaces must be encoded with "%20" instead of "+"
-        return encoded_str.replace('+', '%20').replace('%7E', '~')
+
+        return urllib.urlencode(items).replace('+', '%20').replace('%7E', '~')
 
     @staticmethod
     def get_normalized_url(url):
