@@ -1,8 +1,8 @@
 # requests-oauth
 
-This is a hook for <a href="http://github.com/kennethreitz/requests">python-requests</a> great python HTTP library by <a href="https://github.com/kennethreitz">Kenneth Reitz</a>, that makes python-requests support Open Authentication version 1.0. The intention of this project is to provide the easiest way to do OAuth connections with Python.
+This is a plugin that adds Open Authentication to <a href="http://github.com/kennethreitz/requests">requests</a>, a great Python HTTP library by <a href="https://github.com/kennethreitz">Kenneth Reitz</a>. The intention of this project is to provide the easiest way to do OAuth in Python.
 
-This hook was initially based on <a href="https://github.com/simplegeo/python-oauth2">python-oauth2</a>, which looks unmaintained, kudos to the authors and contributors for doing a huge effort in providing OAuth to python httplib2.
+This project was initially based on <a href="https://github.com/simplegeo/python-oauth2">python-oauth2</a>, which looks unmaintained, kudos to the authors and contributors for doing a huge effort in providing OAuth to python httplib2. Code base has been cleaned and refactored, and several bugs have been fixed.
 
 * Author: <a href="http://www.github.com/maraujop/">Miguel Araujo</a>
 * Licence: BSD
@@ -58,8 +58,3 @@ Then fill in the information there. At the moment, the testing of the library is
 ## Contributing
 
 If you'd like to contribute, simply fork the repository, commit your changes to the `dev` branch (or branch off of it), and send a pull request. Make sure you add yourself to AUTHORS.
-
-## TODO
-
-* Improve testing suite.
-* Support for python3.
