@@ -20,12 +20,12 @@ def to_utf8(x):
     encode utf-8 all strings it contains, returning a list.
     """
     if isinstance(x, basestring): 
-        return x.encode('utf-8')
+        return x.encode('utf-8') if isinstance(x, unicode) else x
     try:
         l = iter(x)
     except TypeError:
         return x
-    return [to_utf8_if_string(i) for i in l]
+    return [to_utf8(i) for i in l]
 
 generate_verifier = lambda length=8: ''.join([str(random.randint(0, 9)) for i in xrange(length)])
 
