@@ -38,10 +38,13 @@ class OAuthTestSuite(unittest.TestCase):
         response = client.get('http://api.twitter.com/1/statuses/friends.json', data={'user_id': 12345})
         self.assertEqual(response.status_code, 200)
 
-    def test_twitter_delete(self):
-        """Depends on GET and POST also working properly, as we must first determine the current username and then create a test list to subsequently delete.
-        This test creates a list on Twitter, then deletes it, testing to ensure that OAuth signing occurs on delete."""
+    def test_twitter_create_delete_list(self):
         screen_name = json.loads(client.get('https://api.twitter.com/1/account/verify_credentials.json').content)['screen_name']
+        user_lists = json.loads(client.get('https://api.twitter.com/1/lists.json', data={'screen_name': screen_name}).content)['lists']
+        for list in user_lists:
+            if list['name'] == 'OAuth Request Hook':
+                client.post('https://api.twitter.com/1/lists/destroy.json', data={'list_id': list['id']})
+
         created_list = json.loads(client.post('https://api.twitter.com/1/%s/lists.json' % screen_name, data={'name': "OAuth Request Hook"}).content)
         list_id = created_list['id']
         response = client.delete('http://api.twitter.com/1/%s/lists/%s.json' % (screen_name, list_id))
@@ -59,6 +62,7 @@ class OAuthTestSuite(unittest.TestCase):
     def test_rdio_oauth_get_token_data(self):
         client = requests.session(hooks={'pre_request': OAuthHook(consumer_key=RDIO_API_KEY, consumer_secret=RDIO_SHARED_SECRET)})
         response = client.post('http://api.rdio.com/oauth/request_token', {'oauth_callback': 'oob'})
+        self.assertEqual(response.status_code, 200)
         response = parse_qs(response.content)
         self.assertTrue(response['oauth_token'])
         self.assertTrue(response['oauth_token_secret'])
@@ -66,11 +70,17 @@ class OAuthTestSuite(unittest.TestCase):
     def test_rdio_oauth_get_token_params(self):
         client = requests.session(hooks={'pre_request': OAuthHook(consumer_key=RDIO_API_KEY, consumer_secret=RDIO_SHARED_SECRET)}, params={'oauth_callback': 'oob'})
         response = client.post('http://api.rdio.com/oauth/request_token')
+        self.assertEqual(response.status_code, 200)
         response = parse_qs(response.content)
         self.assertTrue(response['oauth_token'])
         self.assertTrue(response['oauth_token_secret'])
 
-
+    def test_update_profile_image(self):
+        oauth_hook.header_auth = True
+        client = requests.session(hooks={'pre_request': oauth_hook})
+        files = {'image': ('hommer.gif', open('hommer.gif', 'rb'))}
+        response = client.post('http://api.twitter.com/1/account/update_profile_image.json', files=files)
+        self.assertEqual(response.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()

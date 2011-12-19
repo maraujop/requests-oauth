@@ -29,6 +29,7 @@ class CustomSignatureMethod_HMAC_SHA1(SignatureMethod_HMAC_SHA1):
 
 class OAuthHook(object):
     OAUTH_VERSION = '1.0'
+    header_auth = False
     signature = CustomSignatureMethod_HMAC_SHA1()
 
     def __init__(self, access_token=None, access_token_secret=None, consumer_key=None, consumer_secret=None):
@@ -169,7 +170,12 @@ class OAuthHook(object):
         if request.method in ("GET", "DELETE"):
             request.url = self.to_url(request)
         else:
-            request.headers['Content-Type'] = 'application/x-www-form-urlencoded'
-            request._enc_data = self.to_postdata(request)
+            if not self.header_auth:
+                request._enc_data = self.to_postdata(request)
+            else:
+                authorization_headers = 'OAuth realm="",'
+                authorization_headers += ','.join(['{0}="{1}"'.format(k, urllib.quote(str(v)))
+                    for k, v in request.data_and_params.items() if k.startswith('oauth_')])
+                request.headers['Authorization'] = authorization_headers
 
         return request
