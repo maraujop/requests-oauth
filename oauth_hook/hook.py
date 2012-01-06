@@ -63,7 +63,12 @@ class OAuthHook(object):
         Returns a string that contains the parameters that must be signed. 
         This function is called by SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 
         """
-        data_and_params = dict(request.data.items() + request.params.items())
+        if request.headers['Content-type'] == 'application/json':
+            # POST data is JSON encoded - do not mix POST data and GET params.
+            data_and_params = request.params.copy()
+        else:
+            # POST data not JSON encoded - OK to mix POST data and GET params.
+            data_and_params = dict(request.data.items() + request.params.items())
         for key,value in data_and_params.items():
             request.data_and_params[to_utf8(key)] = to_utf8(value)
 
@@ -171,7 +176,13 @@ class OAuthHook(object):
             request.url = self.to_url(request)
         else:
             if not self.header_auth:
-                request._enc_data = self.to_postdata(request)
+                if request.headers['Content-type'] == 'application/json':
+                    # Data is JSON-encoded; encode OAuth params in
+                    # URL like a GET request to preserve data.
+                    request.url = self.to_url(request)
+                else:
+                    # Data is not JSON-encoded; encode OAuth params into data.
+                    request._enc_data = self.to_postdata(request)
             else:
                 authorization_headers = 'OAuth realm="",'
                 authorization_headers += ','.join(['{0}="{1}"'.format(k, urllib.quote(str(v)))
