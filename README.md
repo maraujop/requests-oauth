@@ -1,8 +1,8 @@
 # requests-oauth
 
-This is a plugin that adds Open Authentication to <a href="http://github.com/kennethreitz/requests">requests</a>, a great Python HTTP library by <a href="https://github.com/kennethreitz">Kenneth Reitz</a>. The intention of this project is to provide the easiest way to do OAuth in Python.
+This plugins adds OAuth v1.0 support to <a href="https://github.com/kennethreitz">@kennethreitz</a> well-known <a href="http://github.com/kennethreitz/requests">requests</a> library providing both header and url-encoded authentication.
 
-This project was initially based on <a href="https://github.com/simplegeo/python-oauth2">python-oauth2</a>, which looks unmaintained, kudos to the authors and contributors for doing a huge effort in providing OAuth to python httplib2. Code base has been cleaned and refactored, and several bugs have been fixed.
+requests-oauth wants to provide the simplest and easiest way to do OAuth in Python. It was initially based on <a href="https://github.com/simplegeo/python-oauth2">python-oauth2</a> (which looks unmaintained), kudos to the authors and contributors for doing a huge effort in providing OAuth to python httplib2. From that point on, the code base has been cleaned, fixing several bugs and heavily refactoring it to eliminate dependencies with python-oauth2, being now a stand-alone plugin.
 
 * Author: <a href="http://www.github.com/maraujop/">Miguel Araujo</a>
 * Licence: BSD
