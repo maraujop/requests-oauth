@@ -32,7 +32,7 @@ class OAuthHook(object):
     header_auth = False
     signature = CustomSignatureMethod_HMAC_SHA1()
 
-    def __init__(self, access_token=None, access_token_secret=None, consumer_key=None, consumer_secret=None):
+    def __init__(self, access_token=None, access_token_secret=None, consumer_key=None, consumer_secret=None, header_auth=None):
         """
         Consumer is compulsory, while the user's Token can be retrieved through the API
         """
@@ -44,6 +44,9 @@ class OAuthHook(object):
         if consumer_key is None and consumer_secret is None:
             consumer_key = self.consumer_key
             consumer_secret = self.consumer_secret
+
+        if header_auth is not None:
+            self.header_auth = header_auth
 
         self.consumer = Consumer(consumer_key, consumer_secret)
 
@@ -128,6 +131,14 @@ class OAuthHook(object):
         # tell urlencode to convert each sequence element to a separate parameter
         return urllib.urlencode(request.data_and_params, True).replace('+', '%20')
 
+    @staticmethod
+    def authorization_header(oauth_params):
+        """Return Authorization header"""
+        authorization_headers = 'OAuth realm="",'
+        authorization_headers += ','.join(['{0}="{1}"'.format(k, urllib.quote(str(v)))
+            for k, v in oauth_params.items()])
+        return authorization_headers
+
     def __call__(self, request):
         """
         Pre-request hook that signs a Python-requests Request for OAuth authentication
@@ -152,30 +163,33 @@ class OAuthHook(object):
         request.cookies = {}
 
         # Dictionary to store data and params mixed together
-        request.data_and_params = {}
+        request.oauth_params = {}
 
         # Adding OAuth params
-        request.params['oauth_consumer_key'] = self.consumer.key
-        request.params['oauth_timestamp'] = str(int(time.time()))
-        request.params['oauth_nonce'] = str(random.randint(0, 100000000))
-        request.params['oauth_version'] = self.OAUTH_VERSION
+        request.oauth_params['oauth_consumer_key'] = self.consumer.key
+        request.oauth_params['oauth_timestamp'] = str(int(time.time()))
+        request.oauth_params['oauth_nonce'] = str(random.randint(0, 100000000))
+        request.oauth_params['oauth_version'] = self.OAUTH_VERSION
         if self.token:
-            request.params['oauth_token'] = self.token.key
+            request.oauth_params['oauth_token'] = self.token.key
         if hasattr(self.token, 'verifier') and self.token.verifier:
-            request.params['oauth_verifier'] = self.token.verifier
-        request.params['oauth_signature_method'] = self.signature.name
-        request.params['oauth_signature'] = self.signature.sign(request, self.consumer, self.token)
-        request.data_and_params['oauth_signature'] = request.params['oauth_signature']
+            request.oauth_params['oauth_verifier'] = self.token.verifier
+        request.oauth_params['oauth_signature_method'] = self.signature.name
+
+        request.data_and_params = request.oauth_params.copy()
+        request.oauth_params['oauth_signature'] = self.signature.sign(request, self.consumer, self.token)
 
         if request.method in ("GET", "DELETE"):
-            request.url = self.to_url(request)
+            if not self.header_auth:
+                request.data_and_params['oauth_signature'] = request.oauth_params['oauth_signature']
+                request.url = self.to_url(request)
+            else:
+                request.headers['Authorization'] = self.authorization_header(request.oauth_params)
         else:
             if not self.header_auth:
+                request.data_and_params['oauth_signature'] = request.oauth_params['oauth_signature']
                 request._enc_data = self.to_postdata(request)
             else:
-                authorization_headers = 'OAuth realm="",'
-                authorization_headers += ','.join(['{0}="{1}"'.format(k, urllib.quote(str(v)))
-                    for k, v in request.data_and_params.items() if k.startswith('oauth_')])
-                request.headers['Authorization'] = authorization_headers
+                request.headers['Authorization'] = self.authorization_header(request.oauth_params)
 
         return request
