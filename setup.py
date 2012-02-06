@@ -4,6 +4,8 @@
 from setuptools import setup, find_packages
 
 version = '0.3.0'
+extras = {}
+extras.update(use_2to3=True)
 
 setup(
     name='requests-oauth',
@@ -27,4 +29,5 @@ setup(
     ),
     keywords=['requests', 'python-requests', 'OAuth', 'open authentication'],
     zip_safe=False,
+    **extras
 )
