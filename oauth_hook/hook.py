@@ -66,7 +66,12 @@ class OAuthHook(object):
         Returns a string that contains the parameters that must be signed. 
         This function is called by SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 
         """
-        data_and_params = dict(request.data.items() + request.params.items())
+        # You can pass a string as data. See issues #10 and #12
+        if isinstance(request.data, basestring):
+            data_and_params = request.params.copy()
+        else:
+            data_and_params = dict(request.data.items() + request.params.items())
+
         for key,value in data_and_params.items():
             request.data_and_params[to_utf8(key)] = to_utf8(value)
 
@@ -187,8 +192,12 @@ class OAuthHook(object):
                 request.headers['Authorization'] = self.authorization_header(request.oauth_params)
         else:
             if not self.header_auth:
-                request.data_and_params['oauth_signature'] = request.oauth_params['oauth_signature']
-                request._enc_data = self.to_postdata(request)
+                # You can pass a string as data. See issues #10 and #12
+                if isinstance(request.data, basestring):
+                    request.url = self.to_url(request)
+                else:
+                    request.data_and_params['oauth_signature'] = request.oauth_params['oauth_signature']
+                    request._enc_data = self.to_postdata(request)
             else:
                 request.headers['Authorization'] = self.authorization_header(request.oauth_params)
 
