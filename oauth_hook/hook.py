@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+from datetime import datetime
 import random
 import urllib
 from urlparse import urlparse, urlunparse, parse_qs, urlsplit, urlunsplit
@@ -67,7 +68,7 @@ class OAuthHook(object):
         This function is called by SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 
         """
         # You can pass a string as data. See issues #10 and #12
-        if isinstance(request.data, basestring):
+        if not request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
             data_and_params = request.params.copy()
         else:
             data_and_params = dict(request.data.items() + request.params.items())
@@ -181,24 +182,29 @@ class OAuthHook(object):
             request.oauth_params['oauth_verifier'] = self.token.verifier
         request.oauth_params['oauth_signature_method'] = self.signature.name
 
+        if 'oauth_callback' in request.data:
+            request.oauth_params['oauth_callback'] = request.data.pop('oauth_callback')
+        if 'oauth_callback' in request.params:
+            request.oauth_params['oauth_callback'] = request.params.pop('oauth_callback')
+
         request.data_and_params = request.oauth_params.copy()
         request.oauth_params['oauth_signature'] = self.signature.sign(request, self.consumer, self.token)
+        request.data_and_params['oauth_signature'] = request.oauth_params['oauth_signature']
 
         if request.method in ("GET", "DELETE"):
             if not self.header_auth:
-                request.data_and_params['oauth_signature'] = request.oauth_params['oauth_signature']
                 request.url = self.to_url(request)
             else:
                 request.headers['Authorization'] = self.authorization_header(request.oauth_params)
         else:
             if not self.header_auth:
                 # You can pass a string as data. See issues #10 and #12
-                if isinstance(request.data, basestring):
+                if not request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
                     request.url = self.to_url(request)
                 else:
-                    request.data_and_params['oauth_signature'] = request.oauth_params['oauth_signature']
                     request._enc_data = self.to_postdata(request)
             else:
+                request._enc_data = ""
                 request.headers['Authorization'] = self.authorization_header(request.oauth_params)
 
         return request
