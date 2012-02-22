@@ -67,14 +67,13 @@ class OAuthHook(object):
         Returns a string that contains the parameters that must be signed. 
         This function is called by SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 
         """
-        # You can pass a string as data. See issues #10 and #12
-        if not request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
-            data_and_params = request.params.copy()
-        else:
+        # See issues #10 and #12
+        if request.headers['Content-Type'] == 'application/x-www-form-urlencoded' \
+            and not isinstance(request.data, basestring):
             data_and_params = dict(request.data.items() + request.params.items())
 
-        for key,value in data_and_params.items():
-            request.data_and_params[to_utf8(key)] = to_utf8(value)
+            for key,value in data_and_params.items():
+                request.data_and_params[to_utf8(key)] = to_utf8(value)
 
         if request.data_and_params.has_key('oauth_signature'):
             del request.data_and_params['oauth_signature']
@@ -182,6 +181,8 @@ class OAuthHook(object):
             request.oauth_params['oauth_verifier'] = self.token.verifier
         request.oauth_params['oauth_signature_method'] = self.signature.name
 
+        # oauth_callback is an special parameter, we remove it out of the body
+        # If it needs to go in the body, it will be overwritten later, otherwise not
         if 'oauth_callback' in request.data:
             request.oauth_params['oauth_callback'] = request.data.pop('oauth_callback')
         if 'oauth_callback' in request.params:
@@ -199,12 +200,12 @@ class OAuthHook(object):
         else:
             if not self.header_auth:
                 # You can pass a string as data. See issues #10 and #12
-                if not request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+                if not request.headers['Content-Type'] == 'application/x-www-form-urlencoded' \
+                    and not isinstance(request.data, basestring):
                     request.url = self.to_url(request)
                 else:
-                    request._enc_data = self.to_postdata(request)
+                    request.data = request.data_and_params
             else:
-                request._enc_data = ""
                 request.headers['Authorization'] = self.authorization_header(request.oauth_params)
 
         return request
