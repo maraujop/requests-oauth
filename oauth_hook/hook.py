@@ -68,7 +68,8 @@ class OAuthHook(object):
         This function is called by SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 
         """
         # See issues #10 and #12
-        if request.headers['Content-Type'] == 'application/x-www-form-urlencoded' \
+        if 'Content-Type' not in request.headers or \
+            request.headers.get('Content-Type') == 'application/x-www-form-urlencoded' \
             and not isinstance(request.data, basestring):
             data_and_params = dict(request.data.items() + request.params.items())
 
@@ -200,7 +201,8 @@ class OAuthHook(object):
         else:
             if not self.header_auth:
                 # You can pass a string as data. See issues #10 and #12
-                if not request.headers['Content-Type'] == 'application/x-www-form-urlencoded' \
+                if 'Content-Type' not in request.headers or \
+                    request.headers['Content-Type'] == 'application/x-www-form-urlencoded' \
                     and not isinstance(request.data, basestring):
                     request.url = self.to_url(request)
                 else:

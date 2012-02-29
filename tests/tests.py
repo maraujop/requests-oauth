@@ -45,6 +45,12 @@ class TwitterOAuthTestSuite(unittest.TestCase):
             response = client.get('http://api.twitter.com/1/statuses/friends.json', data={'user_id': 12345})
             self.assertEqual(response.status_code, 200)
 
+    def test_twitter_status_GET_with_params(self):
+        for header_auth in (True, False):
+            oauth_hook.header_auth = header_auth
+            response = client.get('http://api.twitter.com/1/statuses/friends.json', params={'user_id': 12345})
+            self.assertEqual(response.status_code, 200)
+
     def test_twitter_create_delete_list(self):
         for header_auth in (True, False):
             oauth_hook.header_auth = header_auth
