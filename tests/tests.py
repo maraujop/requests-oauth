@@ -23,6 +23,11 @@ client = requests.session(hooks={'pre_request': oauth_hook})
 
 
 class TwitterOAuthTestSuite(unittest.TestCase):
+    @unittest.skipIf(TWITTER_ACCESS_TOKEN == '' or TWITTER_CONSUMER_KEY == '',
+                     'Missing access token or consumer key.')
+    def setUp(self):
+        pass
+
     def test_twitter_rate_limit_GET(self):
         for header_auth in (True, False):
             oauth_hook.header_auth = header_auth
@@ -85,6 +90,10 @@ class TwitterOAuthTestSuite(unittest.TestCase):
 
 
 class RdioOAuthTestSuite(unittest.TestCase):
+    @unittest.skipIf(RDIO_API_KEY == '', 'No RDIO_API_KEY.')
+    def setUp(self):
+        pass
+
     def test_rdio_oauth_get_token_data(self):
         rdio_oauth_hook = OAuthHook(consumer_key=RDIO_API_KEY, consumer_secret=RDIO_SHARED_SECRET, header_auth=False)
         client = requests.session(hooks={'pre_request': rdio_oauth_hook})
