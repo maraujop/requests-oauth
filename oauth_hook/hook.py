@@ -160,15 +160,11 @@ class OAuthHook(object):
         if isinstance(request.data, list):
             request.data = dict(request.data)
 
-        # We reset _enc_params info to avoid that requests constructs a wrong url when calling _build_url
-        if request._enc_params:
-            request._enc_params = ''
-
         # Looks like OAuth API providers don't handle cookies well, so we reset them
         # See Github issue #5 https://github.com/maraujop/requests-oauth/issues/5
         request.cookies = {}
 
-        # Dictionary to store data and params mixed together
+        # Dictionary to OAuth1 signing params
         request.oauth_params = {}
 
         # Adding OAuth params
@@ -205,6 +201,7 @@ class OAuthHook(object):
                     request.headers['Content-Type'] == 'application/x-www-form-urlencoded' \
                     and not isinstance(request.data, basestring):
                     request.url = self.to_url(request)
+                    request.data = {}
                 else:
                     request.data = request.data_and_params
             else:
