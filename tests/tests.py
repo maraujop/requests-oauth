@@ -22,16 +22,18 @@ oauth_hook = OAuthHook(TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET)
 client = requests.session(hooks={'pre_request': oauth_hook})
 
 
+WHAT_TO_TEST = (True, False)
+
 class TwitterOAuthTestSuite(unittest.TestCase):
     def test_twitter_rate_limit_GET(self):
-        for header_auth in (True, False):
+        for header_auth in WHAT_TO_TEST:
             oauth_hook.header_auth = header_auth
             response = client.get('http://api.twitter.com/1/account/rate_limit_status.json')
             self.assertEqual(response.status_code, 200)
             self.assertEqual(json.loads(response.content)['hourly_limit'], 350)
 
     def test_twitter_status_POST(self):
-        for header_auth in (True, False):
+        for header_auth in WHAT_TO_TEST:
             oauth_hook.header_auth = header_auth
             message = "Kind of a random message %s" % random.random()
             response = client.post('http://api.twitter.com/1/statuses/update.json', 
@@ -40,19 +42,19 @@ class TwitterOAuthTestSuite(unittest.TestCase):
             self.assertEqual(json.loads(response.content)['text'], message)
 
     def test_twitter_status_GET_with_data(self):
-        for header_auth in (True, False):
+        for header_auth in WHAT_TO_TEST:
             oauth_hook.header_auth = header_auth
             response = client.get('http://api.twitter.com/1/statuses/friends.json', data={'user_id': 12345})
             self.assertEqual(response.status_code, 200)
 
     def test_twitter_status_GET_with_params(self):
-        for header_auth in (True, False):
+        for header_auth in WHAT_TO_TEST:
             oauth_hook.header_auth = header_auth
             response = client.get('http://api.twitter.com/1/statuses/friends.json', params={'user_id': 12345})
             self.assertEqual(response.status_code, 200)
 
     def test_twitter_create_delete_list(self):
-        for header_auth in (True, False):
+        for header_auth in WHAT_TO_TEST:
             oauth_hook.header_auth = header_auth
             screen_name = json.loads(client.get('http://api.twitter.com/1/account/verify_credentials.json').content)['screen_name']
             user_lists = json.loads(client.get('http://api.twitter.com/1/lists.json', data={'screen_name': screen_name}).content)['lists']
@@ -67,7 +69,7 @@ class TwitterOAuthTestSuite(unittest.TestCase):
             self.assertEqual(json.loads(response.content), created_list)
 
     def test_twitter_oauth_request_token(self):
-        for header_auth in (True, False):
+        for header_auth in WHAT_TO_TEST:
             twitter_oauth_hook = OAuthHook(header_auth=header_auth)
             client = requests.session(hooks={'pre_request': twitter_oauth_hook})
             response = client.post('http://api.twitter.com/oauth/request_token', {'oauth_callback': 'oob'})
@@ -77,7 +79,7 @@ class TwitterOAuthTestSuite(unittest.TestCase):
             self.assertTrue(response['oauth_token_secret'])
 
     def test_update_profile_image(self):
-        for header_auth in (True, False):
+        for header_auth in WHAT_TO_TEST:
             oauth_hook.header_auth = header_auth
             files = {'image': ('hommer.gif', open('hommer.gif', 'rb'))}
             response = client.post('http://api.twitter.com/1/account/update_profile_image.json', files=files)
