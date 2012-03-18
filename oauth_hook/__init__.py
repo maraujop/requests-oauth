@@ -1,1 +1,1 @@
-from hook import OAuthHook
+from oauth_hook.hook import OAuthHook
