@@ -38,7 +38,6 @@ class TwitterOAuthTestSuite(unittest.TestCase):
         self.assertEqual(json.loads(response.content)['hourly_limit'], 350)
 
     def test_twitter_status_POST_urlencoded(self):
-        self.skipTest('Not POSTing urlencoded request')
         oauth_hook.header_auth = False
         self.test_twitter_status_POST()
 
@@ -62,15 +61,10 @@ class TwitterOAuthTestSuite(unittest.TestCase):
         self.test_twitter_status_GET_with_params()
 
     def test_twitter_status_GET_with_params(self):
-        # does not seem right to send 'params' instead of 'data' for a GET?
-        # adding awkward skip() for now but needs to be thought out.
-        if (self._testMethodName == 'test_twitter_status_GET_with_params'):
-            self.skipTest("Not sending 'params' instead of 'data' for a GET with header_auth=True.")
         response = client.get('http://api.twitter.com/1/statuses/friends.json', params={'user_id': 12345})
         self.assertEqual(response.status_code, 200)
 
     def test_twitter_create_delete_list_urlencoded(self):
-        self.skipTest('Not POSTing urlencoded request')
         oauth_hook.header_auth = False
         self.test_twitter_create_delete_list()
 
@@ -99,7 +93,6 @@ class TwitterOAuthTestSuite(unittest.TestCase):
 
 
     def test_update_profile_image_urlencoded(self):
-        self.skipTest('Not POSTing urlencoded request')
         oauth_hook.header_auth = False
         self.test_update_profile_image()
 
