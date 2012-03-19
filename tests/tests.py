@@ -91,7 +91,7 @@ class TwitterOAuthTestSuite(unittest.TestCase):
         for header_auth in (True, False):
             twitter_oauth_hook = OAuthHook(header_auth=header_auth)
             client = requests.session(hooks={'pre_request': twitter_oauth_hook})
-            response = client.get('http://api.twitter.com/oauth/request_token', data={'oauth_callback': 'oob'})
+            response = client.post('http://api.twitter.com/oauth/request_token', data={'oauth_callback': 'oob'})
             self.assertEqual(response.status_code, 200)
             response = parse_qs(response.content)
             self.assertTrue(response['oauth_token'])
