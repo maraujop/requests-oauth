@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Requests-oauth : Python's Requests OAuth (Open Authentication) plugin" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Requests-oauth</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/maraujop/requests-oauth">Fork Me on GitHub</a>
+
+          <h1 id="project_title">Requests-oauth</h1>
+          <h2 id="project_tagline">Python's Requests OAuth (Open Authentication) plugin</h2>
+
+          <section id="downloads">
+            <a class="zip_download_link" href="https://github.com/maraujop/requests-oauth/zipball/master">Download this project as a .zip file</a>
+            <a class="tar_download_link" href="https://github.com/maraujop/requests-oauth/tarball/master">Download this project as a tar.gz file</a>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>requests-oauth</h1>
+
+<p>This plugins adds OAuth v1.0 support to <a href="https://github.com/kennethreitz">@kennethreitz</a> well-known <a href="http://github.com/kennethreitz/requests">requests</a> library providing both header and url-encoded authentication.</p>
+
+<p>requests-oauth wants to provide the simplest and easiest way to do OAuth in Python. It was initially based on <a href="https://github.com/simplegeo/python-oauth2">python-oauth2</a> (which looks unmaintained), kudos to the authors and contributors for doing a huge effort in providing OAuth to python httplib2. From that point on, the code base has been cleaned, fixing several bugs and heavily refactoring it to eliminate dependencies with python-oauth2, being now a stand-alone plugin.</p>
+
+<ul>
+<li>Author: <a href="http://www.github.com/maraujop/">Miguel Araujo</a>
+</li>
+<li>Licence: BSD</li>
+</ul><h2>Installation</h2>
+
+<p>You can install requests-oauth by simply doing:</p>
+
+<pre><code>pip install requests-oauth
+</code></pre>
+
+<h2>Usage</h2>
+
+<p>Import the hook doing:</p>
+
+<pre><code>from oauth_hook import OAuthHook
+</code></pre>
+
+<p>You can initialize the hook passing it 5 parameters: <code>access_token</code>, <code>access_token_secret</code>, <code>consumer_key</code>, <code>consumer_secret</code> and <code>header_auth</code>. First two <code>access_token</code> and <code>access_token_secret</code> are optional, in case you want to retrieve those from the API service (see later for an example). There are two ways to do initialize the hook. First one:</p>
+
+<pre><code>oauth_hook = OAuthHook(access_token, access_token_secret, consumer_key, consumer_secret, header_auth)
+</code></pre>
+
+<p>The <code>header_auth</code> parameter lets you chose the authentication method used. It's a boolean, if you set it to <code>True</code> you will be using an Authorization header. If your API supports this authentication method, it's the one you should be using and the prefered method by the OAuth spec (<a href="http://tools.ietf.org/html/rfc5849#section-3.5">RFC 5849</a>), an example would be Twitter's API. By default <code>header_auth</code> is set to <code>False</code>, which means url encoded authentication will be used. This is because this the most widely supported authentication system.</p>
+
+<p>If you are using the same <code>consumer_key</code> and <code>consumer_secret</code> all the time, you probably want to setup those fixed, so that you only have to pass the token parameters for setting the hook:</p>
+
+<pre><code>OAuthHook.consumer_key = consumer_key
+OAuthHook.consumer_secret = consumer_secret
+oauth_hook = OAuthHook(access_token, access_token_secret, header_auth=True)
+</code></pre>
+
+<p>Now you need to pass the hook to python-requests, you probably want to do it as a session, so you don't have to do this every time:</p>
+
+<pre><code>client = requests.session(hooks={'pre_request': oauth_hook})
+</code></pre>
+
+<p>What you get is python-requests client which you can use the same way as you use requests API. Let's see a GET example:</p>
+
+<pre><code>response = client.get('<a href="http://api.twitter.com/1/account/rate_limit_status.json'">http://api.twitter.com/1/account/rate_limit_status.json'</a>)
+results = json.loads(response.content)
+</code></pre>
+
+<p>And a POST example:</p>
+
+<pre><code>response = client.post('<a href="http://api.twitter.com/1/statuses/update.json">http://api.twitter.com/1/statuses/update.json</a>', {'status': "Yay! It works!", 'wrap_links': True})
+</code></pre>
+
+<p>Beware that you are not forced to pass the token information to the hook. That way you can retrieve it from the API. Let's see a Twitter example:</p>
+
+<pre><code>client = requests.session(hooks={'pre_request': OAuthHook(consumer_key=consumer_key, consumer_secret=consumer_secret)})
+response = client.get('<a href="https://api.twitter.com/oauth/request_token'">https://api.twitter.com/oauth/request_token'</a>)
+response = parse_qs(response.content)
+print "Token: %s  Secret: %s" % (response['oauth_token'], response['oauth_token_secret'])
+</code></pre>
+
+<h2>Testing</h2>
+
+<p>If you want to run the tests, you will need to copy <code>test_settings.py.template</code> into <code>test_settings.py</code>. This file is in the <code>.gitignore</code> index, so it won't be committed:</p>
+
+<pre><code>cp test_settings.py.template test_settings.py
+</code></pre>
+
+<p>Then fill in the information there. At the moment, the testing of the library is done in a functional way, doing a GET and a POST request against OAuth API services, so use a test account and not your personal account:</p>
+
+<pre><code>./tests.py
+</code></pre>
+
+<h2>Contributing</h2>
+
+<p>If you'd like to contribute, simply fork the repository, commit your changes to the <code>dev</code> branch (or branch off of it), and send a pull request. Make sure you add yourself to AUTHORS.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Requests-oauth maintained by <a href="https://github.com/maraujop">maraujop</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
