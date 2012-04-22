@@ -23,52 +23,51 @@ client = requests.session(hooks={'pre_request': oauth_hook})
 
 
 class TwitterOAuthTestSuite(unittest.TestCase):
-    @unittest.skipIf(TWITTER_ACCESS_TOKEN == '' or TWITTER_CONSUMER_KEY == '', 'Missing access token or consumer key.')
     def setUp(self):
         # twitter prefers that you use header_auth
         oauth_hook.header_auth = True
 
-    def test_twitter_rate_limit_GET_urlencoded(self):
+    def test_rate_limit_GET_urlencoded(self):
         oauth_hook.header_auth = False
-        self.test_twitter_rate_limit_GET()
+        self.test_rate_limit_GET()
 
-    def test_twitter_rate_limit_GET(self):
+    def test_rate_limit_GET(self):
         response = client.get('http://api.twitter.com/1/account/rate_limit_status.json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content)['hourly_limit'], 350)
 
-    def test_twitter_status_POST_urlencoded(self):
+    def test_status_POST_urlencoded(self):
         oauth_hook.header_auth = False
-        self.test_twitter_status_POST()
+        self.test_status_POST()
 
-    def test_twitter_status_POST(self):
+    def test_status_POST(self):
         message = "Kind of a random message %s" % random.random()
         response = client.post('http://api.twitter.com/1/statuses/update.json',
             {'status': message, 'wrap_links': True})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content)['text'], message)
 
-    def test_twitter_status_GET_with_data_urlencoded(self):
+    def test_status_GET_with_data_urlencoded(self):
         oauth_hook.header_auth = False
-        self.test_twitter_status_GET_with_data()
+        self.test_status_GET_with_data()
 
-    def test_twitter_status_GET_with_data(self):
+    def test_status_GET_with_data(self):
         response = client.get('http://api.twitter.com/1/statuses/friends.json', data={'user_id': 12345})
         self.assertEqual(response.status_code, 200)
 
-    def test_twitter_status_GET_with_params_urlencoded(self):
+    def test_status_GET_with_params_urlencoded(self):
         oauth_hook.header_auth = False
-        self.test_twitter_status_GET_with_params()
+        self.test_status_GET_with_params()
 
-    def test_twitter_status_GET_with_params(self):
+    def test_status_GET_with_params(self):
         response = client.get('http://api.twitter.com/1/statuses/friends.json', params={'user_id': 12345})
         self.assertEqual(response.status_code, 200)
 
-    def test_twitter_create_delete_list_urlencoded(self):
+    def test_create_delete_list_urlencoded(self):
         oauth_hook.header_auth = False
-        self.test_twitter_create_delete_list()
+        self.test_create_delete_list()
 
-    def test_twitter_create_delete_list(self):
+    def test_create_delete_list(self):
         screen_name = json.loads(client.get('http://api.twitter.com/1/account/verify_credentials.json').content)['screen_name']
         user_lists = json.loads(client.get('http://api.twitter.com/1/lists.json', data={'screen_name': screen_name}).content)['lists']
         for list in user_lists:
@@ -81,20 +80,12 @@ class TwitterOAuthTestSuite(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(json.loads(response.content), created_list)
 
-    def test_update_profile_image(self):
-        for header_auth in WHAT_TO_TEST:
-            oauth_hook.header_auth = header_auth
-            files = {'image': ('hommer.gif', open('hommer.gif', 'rb'))}
-            response = client.post('http://api.twitter.com/1/account/update_profile_image.json', files=files)
-            self.assertEqual(response.status_code, 200)
-
     def test_three_legged_auth(self):
         yes_or_no = raw_input("Do you want to skip Twitter three legged auth test? (y/n):")
-
         if yes_or_no.lower() in ['y', 'yes']:
             return
 
-        for header_auth in WHAT_TO_TEST:
+        for header_auth in (True, False):
             # See https://dev.twitter.com/docs/auth/implementing-sign-twitter
             # Step 1: Obtaining a request token
             twitter_oauth_hook = OAuthHook(header_auth=header_auth)
@@ -130,10 +121,8 @@ class TwitterOAuthTestSuite(unittest.TestCase):
 
 
 class RdioOAuthTestSuite(unittest.TestCase):
-
-    @unittest.skipIf(RDIO_API_KEY == '', 'No RDIO_API_KEY.')
     def setUp(self):
-        rdio_oauth_hook = OAuthHook(consumer_key=RDIO_API_KEY, consumer_secret=RDIO_SHARED_SECRET, header_auth=True)
+        rdio_oauth_hook = OAuthHook(consumer_key=RDIO_API_KEY, consumer_secret=RDIO_SHARED_SECRET, header_auth=False)
         self.client = requests.session(hooks={'pre_request': rdio_oauth_hook})
 
     def test_rdio_oauth_get_token_data(self):
