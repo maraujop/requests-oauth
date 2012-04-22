@@ -8,7 +8,9 @@ import json
 import requests
 from urlparse import parse_qs
 
-sys.path.append(os.path.dirname(os.getcwd()))
+# Insert this package's path in the PYTHON PATH as first route
+path = os.path.dirname(os.getcwd())
+sys.path.insert(0, path)
 
 from oauth_hook.hook import OAuthHook
 from test_settings import TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET
