@@ -39,7 +39,7 @@ class OAuthHook(object):
         """
         Consumer is compulsory, while the user's Token can be retrieved through the API
         """
-        if access_token is not None and access_token_secret is not None:
+        if access_token is not None:
             self.token = Token(access_token, access_token_secret)
         else:
             self.token = None
@@ -176,8 +176,8 @@ class OAuthHook(object):
         request.oauth_params['oauth_version'] = self.OAUTH_VERSION
         if self.token:
             request.oauth_params['oauth_token'] = self.token.key
-        if hasattr(self.token, 'verifier') and self.token.verifier:
-            request.oauth_params['oauth_verifier'] = self.token.verifier
+        if 'oauth_verifier' in request.data:
+            request.oauth_params['oauth_verifier'] = request.data.pop('oauth_verifier')
         request.oauth_params['oauth_signature_method'] = self.signature.name
 
         # oauth_callback is an special parameter, we remove it out of the body

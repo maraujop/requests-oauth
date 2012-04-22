@@ -68,9 +68,24 @@ class TwitterOAuthTestSuite(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(json.loads(response.content), created_list)
 
-    def test_twitter_oauth_request_token(self):
+    def test_update_profile_image(self):
         for header_auth in WHAT_TO_TEST:
+            oauth_hook.header_auth = header_auth
+            files = {'image': ('hommer.gif', open('hommer.gif', 'rb'))}
+            response = client.post('http://api.twitter.com/1/account/update_profile_image.json', files=files)
+            self.assertEqual(response.status_code, 200)
+
+    def test_three_legged_auth(self):
+        yes_or_no = raw_input("Do you want to skip Twitter three legged auth test? (y/n):")
+
+        if yes_or_no.lower() in ['y', 'yes']:
+            return
+
+        for header_auth in WHAT_TO_TEST:
+            # See https://dev.twitter.com/docs/auth/implementing-sign-twitter
+            # Step 1: Obtaining a request token
             twitter_oauth_hook = OAuthHook(header_auth=header_auth)
+
             client = requests.session(hooks={'pre_request': twitter_oauth_hook})
             response = client.post('http://api.twitter.com/oauth/request_token', {'oauth_callback': 'oob'})
             self.assertEqual(response.status_code, 200)
@@ -78,12 +93,18 @@ class TwitterOAuthTestSuite(unittest.TestCase):
             self.assertTrue(response['oauth_token'])
             self.assertTrue(response['oauth_token_secret'])
 
-    def test_update_profile_image(self):
-        for header_auth in WHAT_TO_TEST:
-            oauth_hook.header_auth = header_auth
-            files = {'image': ('hommer.gif', open('hommer.gif', 'rb'))}
-            response = client.post('http://api.twitter.com/1/account/update_profile_image.json', files=files)
-            self.assertEqual(response.status_code, 200)
+            oauth_token = response['oauth_token']
+            oauth_secret = response['oauth_token_secret']
+
+            # Step 2: Redirecting the user
+            print "Go to https://api.twitter.com/oauth/authenticate?oauth_token=%s and sign in into the application, then enter your PIN" % oauth_token[0]
+            oauth_verifier = raw_input('Please enter your PIN:')
+
+            # Step 3: Authenticate
+            response = client.post('http://api.twitter.com/oauth/access_token', {'oauth_verifier': oauth_verifier, 'oauth_token': oauth_token})
+            response = parse_qs(response.content)
+            self.assertTrue(response['oauth_token'])
+            self.assertTrue(response['oauth_token_secret'])
 
 
 class RdioOAuthTestSuite(unittest.TestCase):
