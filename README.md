@@ -47,7 +47,7 @@ And a POST example:
 Beware that you are not forced to pass the token information to the hook. That way you can retrieve it from the API. Let's see a Twitter example:
 
     client = requests.session(hooks={'pre_request': OAuthHook(consumer_key=consumer_key, consumer_secret=consumer_secret)})
-    response = client.get('https://api.twitter.com/oauth/request_token')
+    response = client.post('https://api.twitter.com/oauth/request_token')
     response = parse_qs(response.content)
     print "Token: %s  Secret: %s" % (response['oauth_token'], response['oauth_token_secret'])
 
