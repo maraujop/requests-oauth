@@ -162,10 +162,6 @@ class OAuthHook(object):
         if isinstance(request.data, list):
             request.data = dict(request.data)
 
-        # Looks like OAuth API providers don't handle cookies well, so we reset them
-        # See Github issue #5 https://github.com/maraujop/requests-oauth/issues/5
-        request.cookies = {}
-
         # Dictionary to OAuth1 signing params
         request.oauth_params = {}
 
