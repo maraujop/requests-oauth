@@ -87,10 +87,11 @@ class TwitterOAuthTestSuite(unittest.TestCase):
         if yes_or_no.lower() in ['y', 'yes']:
             return
 
+        twitter_oauth_hook = OAuthHook()
         for header_auth in (True, False):
             # See https://dev.twitter.com/docs/auth/implementing-sign-twitter
             # Step 1: Obtaining a request token
-            twitter_oauth_hook = OAuthHook(header_auth=header_auth)
+            twitter_oauth_hook.header_auth = header_auth
 
             client = requests.session(hooks={'pre_request': twitter_oauth_hook})
             response = client.post('http://api.twitter.com/oauth/request_token', data={'oauth_callback': 'oob'})
@@ -107,7 +108,7 @@ class TwitterOAuthTestSuite(unittest.TestCase):
             oauth_verifier = raw_input('Please enter your PIN:')
 
             # Step 3: Authenticate
-            response = client.post('http://api.twitter.com/oauth/access_token', {'oauth_verifier': oauth_verifier, 'oauth_token': oauth_token})
+            response = client.post('http://api.twitter.com/oauth/access_token', {'oauth_verifier': oauth_verifier, 'oauth_token': oauth_token[0]})
             response = parse_qs(response.content)
             self.assertTrue(response['oauth_token'])
             self.assertTrue(response['oauth_token_secret'])
