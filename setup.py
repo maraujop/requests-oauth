@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 
-version = '0.3.0'
+version = '0.4.0'
 
 setup(
     name='requests-oauth',
@@ -14,7 +14,7 @@ setup(
     author_email='miguel.araujo.perez@gmail.com',
     url='http://github.com/maraujop/requests-oauth',
     packages=find_packages(),
-    install_requires=['requests', ],
+    install_requires=['requests>=0.12.1', ],
     license='BSD',
     classifiers=(
         'Development Status :: 4 - Beta',
