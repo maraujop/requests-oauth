@@ -72,7 +72,7 @@ In this step we give the user a link or open a web browser redirecting him to an
 Once we get user's authorization, we request a final access token, to operate on behalf of the user. We build a new hook using previous request token information achieved on step1 and pass the verifier (got in step2) as data using `oauth_verifier` key:
 
     new_imgur_oauth_hook = OAuthHook(oauth_token, oauth_secret, IMGUR_CONSUMER_KEY, IMGUR_CONSUMER_SECRET)
-    response = requests.post('http://api.imgur.com/oauth/access_token', {'oauth_verifier': oauth_verifier}, hooks=new_imgur_oauth_hook)
+    response = requests.post('http://api.imgur.com/oauth/access_token', {'oauth_verifier': oauth_verifier}, hooks={'pre_request': new_imgur_oauth_hook})
     response = parse_qs(response.content)
     final_token = response['oauth_token'][0]
     final_token_secret = response['oauth_token_secret'][0]
