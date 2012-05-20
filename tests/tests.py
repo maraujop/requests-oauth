@@ -16,6 +16,10 @@ from oauth_hook.hook import OAuthHook
 from test_settings import TWITTER_ACCESS_TOKEN, TWITTER_ACCESS_TOKEN_SECRET
 from test_settings import TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET
 from test_settings import RDIO_API_KEY, RDIO_SHARED_SECRET
+from test_settings import (
+    IMGUR_CONSUMER_KEY, IMGUR_CONSUMER_SECRET,
+    IMGUR_ACCESS_TOKEN, IMGUR_ACCESS_TOKEN_SECRET,
+)
 
 # Initializing the hook and Python-requests client
 OAuthHook.consumer_key = TWITTER_CONSUMER_KEY
@@ -142,6 +146,50 @@ class RdioOAuthTestSuite(unittest.TestCase):
         response = parse_qs(response.content)
         self.assertTrue(response['oauth_token'])
         self.assertTrue(response['oauth_token_secret'])
+
+
+class ImgurOAuthTestSuite(unittest.TestCase):
+    def test_three_legged_auth(self):
+        yes_or_no = raw_input("Do you want to skip Imgur three legged auth test? (y/n):")
+        if yes_or_no.lower() in ['y', 'yes']:
+            return
+
+        for header_auth in (True, False):
+            # Step 1: Obtaining a request token
+            imgur_oauth_hook = OAuthHook(
+                consumer_key=IMGUR_CONSUMER_KEY,
+                consumer_secret=IMGUR_CONSUMER_SECRET,
+                header_auth=header_auth
+            )
+            client = requests.session(hooks={'pre_request': imgur_oauth_hook})
+
+            response = client.post('http://api.imgur.com/oauth/request_token')
+            qs = parse_qs(response.text)
+            oauth_token = qs['oauth_token'][0]
+            oauth_secret = qs['oauth_token_secret'][0]
+
+            # Step 2: Redirecting the user
+            print "Go to http://api.imgur.com/oauth/authorize?oauth_token=%s and sign in into the application, then enter your PIN" % oauth_token
+            oauth_verifier = raw_input('Please enter your PIN:')
+
+            # Step 3: Authenticate
+            new_imgur_oauth_hook = OAuthHook(oauth_token, oauth_secret, IMGUR_CONSUMER_KEY, IMGUR_CONSUMER_SECRET, header_auth)
+            new_client = requests.session(
+                hooks={'pre_request': new_imgur_oauth_hook}
+            )
+            response = new_client.post('http://api.imgur.com/oauth/access_token', {'oauth_verifier': oauth_verifier})
+            response = parse_qs(response.content)
+            token = response['oauth_token'][0]
+            token_secret = response['oauth_token_secret'][0]
+            self.assertTrue(token)
+            self.assertTrue(token_secret)
+
+    def test_stats(self):
+        imgur_oauth_hook = OAuthHook(IMGUR_ACCESS_TOKEN, IMGUR_ACCESS_TOKEN_SECRET, IMGUR_CONSUMER_KEY, IMGUR_CONSUMER_SECRET, True)
+        client = requests.session(hooks={'pre_request': imgur_oauth_hook})
+
+        response = client.get("http://api.imgur.com/2/account/images.json")
+        self.assertEqual(response.status_code, 200)
 
 
 if __name__ == '__main__':
