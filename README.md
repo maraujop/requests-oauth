@@ -44,12 +44,40 @@ And a POST example:
 
     response = client.post('http://api.twitter.com/1/statuses/update.json', {'status': "Yay! It works!", 'wrap_links': True})
 
-Beware that you are not forced to pass the token information to the hook. That way you can retrieve it from the API. Let's see a Twitter example:
+## 3-legged Authorization
 
-    client = requests.session(hooks={'pre_request': OAuthHook(consumer_key=consumer_key, consumer_secret=consumer_secret)})
-    response = client.post('https://api.twitter.com/oauth/request_token')
+First time authorization and authentication follows a system named three legged OAuth, very well described in <a href="https://dev.twitter.com/docs/auth/implementing-sign-twitter">Twitter documentation</a>.
+
+Basically it is composed of three steps. Let's see an example based on Imgur's API. All the other APIs work pretty much the same way, only endpoints (urls) change:
+
+#### Step 1: Obtaining a request token
+
+We start asking for a request token, which will finally turn into an access token, the one we need to operate on behalf of the user.
+
+    imgur_oauth_hook = OAuthHook(consumer_key=YOUR_IMGUR_CONSUMER_KEY, consumer_secret=YOUR_IMGUR_CONSUMER_SECRET)
+    response = requests.post('http://api.imgur.com/oauth/request_token', hooks={'pre_request': imgur_oauth_hook})
+    qs = parse_qs(response.text)
+    oauth_token = qs['oauth_token'][0]
+    oauth_secret = qs['oauth_token_secret'][0]
+
+#### Step 2: Redirecting the user for getting authorization
+
+In this step we give the user a link or open a web browser redirecting him to an endpoint, passing the `oauth_token` got in the previous step as a url parameter. The user will get a dialog asking for authorization for our application. In this case we are doing an out of band desktop application, so the user will have to input us a code named `verifier`. In web apps, we will get this code as a webhook.
+
+    print "Go to http://api.imgur.com/oauth/authorize?oauth_token=%s allow the app and copy your PIN" % oauth_token
+    oauth_verifier = raw_input('Please enter your PIN:')
+
+#### Step 3: Authenticate
+
+Once we get user's authorization, we request a final access token, to operate on behalf of the user. We build a new hook using previous request token information achieved on step1 and pass the verifier (got in step2) as data using `oauth_verifier` key:
+
+    new_imgur_oauth_hook = OAuthHook(oauth_token, oauth_secret, IMGUR_CONSUMER_KEY, IMGUR_CONSUMER_SECRET)
+    response = requests.post('http://api.imgur.com/oauth/access_token', {'oauth_verifier': oauth_verifier}, hooks=new_imgur_oauth_hook)
     response = parse_qs(response.content)
-    print "Token: %s  Secret: %s" % (response['oauth_token'], response['oauth_token_secret'])
+    final_token = response['oauth_token'][0]
+    final_token_secret = response['oauth_token_secret'][0]
+
+These `final_token` and `final_token_secret` are the credentials we need to use for handling user's oauth, so most likely you will want to persist them somehow. These are the ones you should use for building a requests session with a new hook. Beware that not all OAuth APIs provide unlimited time credentials.
 
 ## Testing
 
@@ -57,7 +85,7 @@ If you want to run the tests, you will need to copy `test_settings.py.template` 
 
     cp test_settings.py.template test_settings.py
 
-Then fill in the information there. At the moment, the testing of the library is done in a functional way, doing a GET and a POST request against OAuth API services, so use a test account and not your personal account:
+Then fill in the information there. The testing of the library is done in a functional way, doing GETs and POSTs against public OAuth APIs like Twitter, so use a test account and not your personal account:
 
     ./tests.py
 
