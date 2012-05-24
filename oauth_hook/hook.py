@@ -187,22 +187,17 @@ class OAuthHook(object):
         request.oauth_params['oauth_signature'] = self.signature.sign(request, self.consumer, self.token)
         request.data_and_params['oauth_signature'] = request.oauth_params['oauth_signature']
 
-        if request.method in ("GET", "DELETE"):
-            if not self.header_auth:
-                request.url = self.to_url(request)
-            else:
-                request.headers['Authorization'] = self.authorization_header(request.oauth_params)
+        if self.header_auth:
+            request.headers['Authorization'] = self.authorization_header(request.oauth_params)
+        elif request.method in ("GET", "DELETE"):
+            request.url = self.to_url(request)
+        elif ('Content-Type' not in request.headers or \
+              request.headers['Content-Type'] != 'application/x-www-form-urlencoded') \
+              and not isinstance(request.data, basestring):
+            # You can pass a string as data. See issues #10 and #12
+            request.url = self.to_url(request)
+            request.data = {}
         else:
-            if not self.header_auth:
-                # You can pass a string as data. See issues #10 and #12
-                if ('Content-Type' not in request.headers or \
-                    request.headers['Content-Type'] != 'application/x-www-form-urlencoded') \
-                    and not isinstance(request.data, basestring):
-                    request.url = self.to_url(request)
-                    request.data = {}
-                else:
-                    request.data = request.data_and_params
-            else:
-                request.headers['Authorization'] = self.authorization_header(request.oauth_params)
+            request.data = request.data_and_params
 
         return request
