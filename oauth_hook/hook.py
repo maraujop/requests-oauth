@@ -73,6 +73,7 @@ class OAuthHook(object):
         if ('Content-Type' not in request.headers or \
             request.headers.get('Content-Type') == 'application/x-www-form-urlencoded') \
             and not isinstance(request.data, basestring):
+
             data_and_params = dict(request.data.items() + request.params.items())
 
             for key,value in data_and_params.items():
@@ -193,16 +194,20 @@ class OAuthHook(object):
             else:
                 request.headers['Authorization'] = self.authorization_header(request.oauth_params)
         else:
-            if not self.header_auth:
-                # You can pass a string as data. See issues #10 and #12
-                if ('Content-Type' not in request.headers or \
-                    request.headers['Content-Type'] != 'application/x-www-form-urlencoded') \
-                    and not isinstance(request.data, basestring):
+            # You can pass a string as data. See issues #10 and #12
+            if ('Content-Type' not in request.headers or \
+                request.headers['Content-Type'] != 'application/x-www-form-urlencoded') \
+                and isinstance(request.data, basestring):
+                
+                if self.header_auth:
+                    request.headers['Authorization'] = self.authorization_header(request.oauth_params)
+                else:
                     request.url = self.to_url(request)
-                    request.data = {}
+
+            else:
+                if self.header_auth:
+                    request.headers['Authorization'] = self.authorization_header(request.oauth_params)
                 else:
                     request.data = request.data_and_params
-            else:
-                request.headers['Authorization'] = self.authorization_header(request.oauth_params)
-
+            
         return request
