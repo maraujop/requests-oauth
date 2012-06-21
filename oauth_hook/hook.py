@@ -66,12 +66,12 @@ class OAuthHook(object):
     @staticmethod
     def get_normalized_parameters(request):
         """
-        Returns a string that contains the parameters that must be signed. 
-        This function is called by SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1 
+        Returns a string that contains the parameters that must be signed.
+        This function is called by SignatureMethod subclass CustomSignatureMethod_HMAC_SHA1
         """
         # See issues #10 and #12
         if ('Content-Type' not in request.headers or \
-            request.headers.get('Content-Type') == 'application/x-www-form-urlencoded') \
+            request.headers.get('Content-Type').startswith('application/x-www-form-urlencoded')) \
             and not isinstance(request.data, basestring):
             data_and_params = dict(request.data.items() + request.params.items())
 
@@ -129,7 +129,7 @@ class OAuthHook(object):
 
         for key, value in request.data_and_params.iteritems():
             query.setdefault(key, []).append(value)
-            
+
         query = urllib.urlencode(query, True)
         return urlunsplit((scheme, netloc, path, query, fragment))
 
