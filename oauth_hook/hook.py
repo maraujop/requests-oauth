@@ -143,7 +143,7 @@ class OAuthHook(object):
     def authorization_header(oauth_params):
         """Return Authorization header"""
         authorization_headers = 'OAuth realm="",'
-        authorization_headers += ','.join(['{0}="{1}"'.format(k, urllib.quote(str(v)))
+        authorization_headers += ','.join(['{0}="{1}"'.format(k, urllib.quote(str(v), ''))
             for k, v in oauth_params.items()])
         return authorization_headers
 
