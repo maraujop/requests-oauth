@@ -172,16 +172,15 @@ class OAuthHook(object):
         request.oauth_params['oauth_version'] = self.OAUTH_VERSION
         if self.token:
             request.oauth_params['oauth_token'] = self.token.key
-        if 'oauth_verifier' in request.data:
-            request.oauth_params['oauth_verifier'] = request.data.pop('oauth_verifier')
         request.oauth_params['oauth_signature_method'] = self.signature.name
 
-        # oauth_callback is an special parameter, we remove it out of the body
+        # these are special parameters, so we remove them from the body
         # If it needs to go in the body, it will be overwritten later, otherwise not
-        if 'oauth_callback' in request.data:
-            request.oauth_params['oauth_callback'] = request.data.pop('oauth_callback')
-        if 'oauth_callback' in request.params:
-            request.oauth_params['oauth_callback'] = request.params.pop('oauth_callback')
+        for key in ['oauth_callback', 'oauth_session_handle', 'oauth_verifier']:
+            if key in request.data:
+                request.oauth_params[key] = request.data.pop(key)
+            if key in request.params:
+                request.oauth_params[key] = request.params.pop(key)
 
         request.data_and_params = request.oauth_params.copy()
         request.oauth_params['oauth_signature'] = self.signature.sign(request, self.consumer, self.token)
