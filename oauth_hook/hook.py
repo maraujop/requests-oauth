@@ -12,18 +12,14 @@ from auth import SignatureMethod_HMAC_SHA1
 
 class CustomSignatureMethod_HMAC_SHA1(SignatureMethod_HMAC_SHA1):
     def signing_base(self, request, consumer, token):
+        """ This method generates the OAuth signature. 
+        
+        It's defined here to avoid circular imports.
         """
-        This method generates the OAuth signature. It's defined here to avoid circular imports.
-        """
-        rr = OAuthHook.get_normalized_parameters(request)
-        if request.url == "https://api.twitter.com/1.1/statuses/update_with_media.json":
-            rr = rr.split('&')
-            rr = rr[0:-1]
-            rr = "&".join(rr)
         sig = (
             escape(request.method),
             escape(OAuthHook.get_normalized_url(request.url)),
-            escape(rr),
+            escape(OAuthHook.get_normalized_parameters(request)),
         )
  
         key = '%s&' % escape(consumer.secret)
@@ -104,6 +100,10 @@ class OAuthHook(object):
         query_string = urlparse(request.url)[4]
         items.extend([(to_utf8(k), to_utf8(v)) for k, v in OAuthHook._split_url_string(query_string).items()])
         items.sort()
+
+        if request.url == ("https://api.twitter.com/1.1/"
+                           "statuses/update_with_media.json"):
+            items = items[0:-1]
 
         return urllib.urlencode(items).replace('+', '%20').replace('%7E', '~')
 
