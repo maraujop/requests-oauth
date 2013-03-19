@@ -15,18 +15,22 @@ class CustomSignatureMethod_HMAC_SHA1(SignatureMethod_HMAC_SHA1):
         """
         This method generates the OAuth signature. It's defined here to avoid circular imports.
         """
+        rr = OAuthHook.get_normalized_parameters(request)
+        if request.url == "https://api.twitter.com/1.1/statuses/update_with_media.json":
+            rr = rr.split('&')
+            rr = rr[0:-1]
+            rr = "&".join(rr)
         sig = (
             escape(request.method),
             escape(OAuthHook.get_normalized_url(request.url)),
-            escape(OAuthHook.get_normalized_parameters(request)),
+            escape(rr),
         )
-
+ 
         key = '%s&' % escape(consumer.secret)
         if token is not None:
             key += escape(token.secret)
         raw = '&'.join(sig)
         return key, raw
-
 
 class OAuthHook(object):
     OAUTH_VERSION = '1.0'
