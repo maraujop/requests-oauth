@@ -23,7 +23,7 @@ You can initialize the hook passing it 5 parameters: `access_token`, `access_tok
 
     oauth_hook = OAuthHook(access_token, access_token_secret, consumer_key, consumer_secret, header_auth)
 
-The `header_auth` parameter lets you chose the authentication method used. It's a boolean, if you set it to `True` you will be using an Authorization header. If your API supports this authentication method, it's the one you should be using and the prefered method by the OAuth spec (<a href="http://tools.ietf.org/html/rfc5849#section-3.5">RFC 5849</a>), an example would be Twitter's API. By default `header_auth` is set to `False`, which means url encoded authentication will be used. This is because this the most widely supported authentication system.
+The `header_auth` parameter lets you chose the authentication method used. It's a boolean, if you set it to `True` you will be using an Authorization header. If your API supports this authentication method, it's the one you should be using and the preferred method by the OAuth spec (<a href="http://tools.ietf.org/html/rfc5849#section-3.5">RFC 5849</a>), an example would be Twitter's API. By default `header_auth` is set to `False`, which means url encoded authentication will be used. This is because this the most widely supported authentication system.
 
 If you are using the same `consumer_key` and `consumer_secret` all the time, you probably want to setup those fixed, so that you only have to pass the token parameters for setting the hook:
 

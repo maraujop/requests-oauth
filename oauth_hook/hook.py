@@ -151,7 +151,7 @@ class OAuthHook(object):
         """
         Pre-request hook that signs a Python-requests Request for OAuth authentication
         """
-        # These checkings are necessary because type inconsisntecy of requests library
+        # These checkings are necessary because type inconsistency of requests library
         # See request Github issue #230 https://github.com/kennethreitz/requests/pull/230
         if not request.params:
             request.params = {}
