@@ -13,7 +13,7 @@ setup(
     author='Miguel Araujo',
     author_email='miguel.araujo.perez@gmail.com',
     url='http://github.com/maraujop/requests-oauth',
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests*']),
     install_requires=['requests>=0.12.1', ],
     license='BSD',
     classifiers=(
